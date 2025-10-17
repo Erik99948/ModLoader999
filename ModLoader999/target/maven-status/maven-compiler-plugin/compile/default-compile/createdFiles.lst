@@ -1,0 +1,10 @@
+com\example\modloader\api\ModAPI.class
+com\example\modloader\api\ModAPIImpl.class
+com\example\modloader\ModLoaderService.class
+com\example\modloader\ModLoader.class
+com\example\modloader\PlayerJoinListener.class
+com\example\modloader\WebServer.class
+com\example\modloader\api\ModInitializer.class
+com\example\modloader\CustomItemRegistry.class
+com\example\modloader\ResourcePackGenerator.class
+com\example\modloader\CustomMobRegistry.class
