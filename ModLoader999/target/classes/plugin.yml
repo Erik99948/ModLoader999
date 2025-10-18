@@ -1,6 +1,0 @@
-name: ModLoader
-version: 1.0-SNAPSHOT
-main: com.example.modloader.ModLoader
-api-version: '1.21'
-author: Gemini
-description: A universal content engine for PaperMC.
