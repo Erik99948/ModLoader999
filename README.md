@@ -595,4 +595,5 @@ if (loaded) {
 1.  **Package:** Run `mvn package` or `gradle build` in your mod's project directory.
 2.  **Rename:** Locate the generated `.jar` file in your `target/` (Maven) or `build/libs/` (Gradle) folder. Rename its extension from `.jar` to `.modloader999` (e.g., `MyAwesomeMod-1.0.0.jar` becomes `MyAwesomeMod-1.0.0.modloader999`).
 3.  **Deploy:** Place the `.modloader999` file into the `plugins/ModLoader999/Mods/` folder on your Minecraft server.
-4.  **Reload:** Restart your server or use `/modloader reload` to load your new mod.
+   
+5.  **Reload:** Restart your server or use `/modloader reload` to load your new mod.
