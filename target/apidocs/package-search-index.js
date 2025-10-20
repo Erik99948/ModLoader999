@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.example.modloader"},{"l":"com.example.modloader.api"},{"l":"com.example.modloader.api.block"},{"l":"com.example.modloader.api.mob"},{"l":"com.example.modloader.api.world"},{"l":"com.example.modloader.mob"}];updateSearchResults();
