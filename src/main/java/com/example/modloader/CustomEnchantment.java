@@ -18,7 +18,7 @@ public abstract class CustomEnchantment extends Enchantment {
     private final boolean cursed;
     private final NamespacedKey key;
 
-    protected CustomEnchantment(JavaPlugin plugin, String namespace, String name, int maxLevel, EnchantmentTarget itemTarget, boolean treasure, boolean cursed) { // Call the deprecated constructor with a dummy string
+    protected CustomEnchantment(JavaPlugin plugin, String namespace, String name, int maxLevel, EnchantmentTarget itemTarget, boolean treasure, boolean cursed) {
         this.key = new NamespacedKey(plugin, namespace);
         this.name = name;
         this.maxLevel = maxLevel;
@@ -33,7 +33,7 @@ public abstract class CustomEnchantment extends Enchantment {
     }
 
     public boolean isSupported() {
-        return true; // Custom enchantments are always supported
+        return true;
     }
 
     @Override
@@ -68,7 +68,6 @@ public abstract class CustomEnchantment extends Enchantment {
 
     @Override
     public boolean conflictsWith(Enchantment other) {
-        // Implement custom conflict logic here
         return false;
     }
 

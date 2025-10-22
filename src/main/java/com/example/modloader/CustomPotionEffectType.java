@@ -17,7 +17,7 @@ public abstract class CustomPotionEffectType extends PotionEffectType {
     private final PotionEffectType conflict;
     private final NamespacedKey key;
 
-    protected CustomPotionEffectType(JavaPlugin plugin, String namespace, String name, Color color, boolean instant, PotionEffectType conflict) { // Call the deprecated constructor with a dummy string
+    protected CustomPotionEffectType(JavaPlugin plugin, String namespace, String name, Color color, boolean instant, PotionEffectType conflict) {
  super();
         this.key = new NamespacedKey(plugin, namespace);
         this.name = name;
@@ -25,7 +25,6 @@ public abstract class CustomPotionEffectType extends PotionEffectType {
         this.instant = instant;
         this.conflict = conflict;
 
-        // Use reflection to set the key field, as the super constructor is deprecated
         try {
             Field keyField = PotionEffectType.class.getDeclaredField("key");
             keyField.setAccessible(true);
@@ -54,7 +53,4 @@ public abstract class CustomPotionEffectType extends PotionEffectType {
     public Color getColor() {
         return color;
     }
-
-    // Bukkit's PotionEffectType does not have getConflictWith() or isSupported() in all versions
-    // Mod developers will need to handle conflicts and support logic in their implementation.
 }

@@ -34,13 +34,11 @@ public class CustomPotionEffectAPIImpl implements CustomPotionEffectAPI {
         try {
             Field keyField = PotionEffectType.class.getDeclaredField("byKey");
             keyField.setAccessible(true);
-            @SuppressWarnings("unchecked")
             Map<org.bukkit.NamespacedKey, PotionEffectType> byKey = (Map<org.bukkit.NamespacedKey, PotionEffectType>) keyField.get(null);
             byKey.put(effectType.getKey(), effectType);
 
             Field nameField = PotionEffectType.class.getDeclaredField("byName");
             nameField.setAccessible(true);
-            @SuppressWarnings("unchecked")
             Map<String, PotionEffectType> byName = (Map<String, PotionEffectType>) nameField.get(null);
             byName.put(effectType.getName(), effectType);
 
@@ -78,17 +76,14 @@ public class CustomPotionEffectAPIImpl implements CustomPotionEffectAPI {
         return entity.addPotionEffect(effect);
     }
 
-    // Method to unregister all custom potion effect types (useful on plugin disable)
     public void unregisterAll() {
         try {
             Field byKeyField = PotionEffectType.class.getDeclaredField("byKey");
             byKeyField.setAccessible(true);
-            @SuppressWarnings("unchecked")
             Map<org.bukkit.NamespacedKey, PotionEffectType> byKey = (Map<org.bukkit.NamespacedKey, PotionEffectType>) byKeyField.get(null);
 
             Field byNameField = PotionEffectType.class.getDeclaredField("byName");
             byNameField.setAccessible(true);
-            @SuppressWarnings("unchecked")
             Map<String, PotionEffectType> byName = (Map<String, PotionEffectType>) byNameField.get(null);
 
             for (CustomPotionEffectType effectType : registeredPotionEffectTypes.values()) {

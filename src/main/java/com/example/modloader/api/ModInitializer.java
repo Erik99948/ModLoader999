@@ -1,12 +1,22 @@
 package com.example.modloader.api;
 
+import com.example.modloader.api.dependencyinjection.Binder;
+
 public interface ModInitializer {
+
+    void configure(Binder binder);
+
+    void onPreLoad(ModAPI api);
 
     void onLoad(ModAPI api);
 
-    default void onEnable() {
-    }
+    void onPostLoad(ModAPI api);
 
-    default void onDisable() {
-    }
+    void onEnable();
+
+    void onDisable();
+
+    void onPreDisable();
+
+    void onPostDisable();
 }

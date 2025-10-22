@@ -33,7 +33,6 @@ public class CustomWorldGeneratorAPIImpl implements CustomWorldGeneratorAPI {
         return registeredGenerators.get(worldName.toLowerCase());
     }
 
-    // Method to unregister all custom chunk generators (useful on plugin disable)
     public void unregisterAll() {
         registeredGenerators.clear();
         plugin.getLogger().info("Unregistered all custom chunk generators.");

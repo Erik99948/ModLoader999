@@ -30,6 +30,12 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
+import com.example.modloader.api.event.EventBus;
+import com.example.modloader.api.dependencyinjection.API;
+import com.example.modloader.api.dependencyinjection.Binder;
+import com.example.modloader.api.dependencyinjection.ModAPIRegistry;
+import com.example.modloader.api.dependencyinjection.ModInjector;
+
 public class ModLoaderService {
 
     private final JavaPlugin plugin;
@@ -40,8 +46,17 @@ public class ModLoaderService {
     private final CustomEventListenerRegistry eventListenerRegistry;
     private final CustomRecipeRegistry recipeRegistry;
     private final CustomWorldGeneratorRegistry worldGeneratorRegistry;
-    private final ModAPI modAPI;
+    private final com.example.modloader.api.CustomEnchantmentAPIImpl customEnchantmentAPIImpl;
+    private final com.example.modloader.api.CustomPotionEffectAPIImpl customPotionEffectAPIImpl;
+    private final com.example.modloader.api.CustomWorldGeneratorAPIImpl customWorldGeneratorAPIImpl;
+    private final com.example.modloader.api.ModMessageAPIImpl modMessageAPIImpl;
     private final File resourceStagingDir;
+    private final ModConfigManager modConfigManager;
+    private final AssetManager assetManager;
+    private final ResourcePackGenerator resourcePackGenerator;
+    private org.bukkit.scheduler.BukkitTask messageDispatchTask;
+    private final EventBus eventBus;
+    private final ModAPIRegistry modAPIRegistry;
 
     private final Map<String, ModInfo> availableMods = new HashMap<>();
     private final List<ModInfo> loadOrder = new LinkedList<>();
@@ -55,8 +70,28 @@ public class ModLoaderService {
         this.eventListenerRegistry = new CustomEventListenerRegistry(plugin);
         this.recipeRegistry = new CustomRecipeRegistry(plugin);
         this.worldGeneratorRegistry = new CustomWorldGeneratorRegistry(plugin);
-        this.modAPI = new ModAPIImpl(plugin, itemRegistry, mobRegistry, blockRegistry, commandRegistry, eventListenerRegistry, recipeRegistry, worldGeneratorRegistry);
+        this.customEnchantmentAPIImpl = new com.example.modloader.api.CustomEnchantmentAPIImpl(plugin);
+        this.customPotionEffectAPIImpl = new com.example.modloader.api.CustomPotionEffectAPIImpl(plugin);
+        this.customWorldGeneratorAPIImpl = new com.example.modloader.api.CustomWorldGeneratorAPIImpl(plugin);
+        this.modMessageAPIImpl = new com.example.modloader.api.ModMessageAPIImpl(plugin, "ModLoaderService");
+        this.modConfigManager = new ModConfigManager(plugin);
+        this.assetManager = new AssetManager(plugin);
         this.resourceStagingDir = new File(plugin.getDataFolder(), "resource-pack-staging");
+        this.resourcePackGenerator = new ResourcePackGenerator(plugin, assetManager);
+        this.eventBus = new EventBus();
+        this.modAPIRegistry = new ModAPIRegistry();
+
+
+        this.messageDispatchTask = new org.bukkit.scheduler.BukkitRunnable() {
+            @Override
+            public void run() {
+                for (ModInfo mod : loadOrder) {
+                    if (mod.getState() == ModState.ENABLED) {
+                        modMessageAPIImpl.dispatchMessages(mod.getName());
+                    }
+                }
+            }
+}.runTaskTimer(plugin, 0L, 1L);
     }
 
     public void loadModsAndGeneratePack() {
@@ -138,6 +173,7 @@ public class ModLoaderService {
             }
 
             ModInfo modInfo = new ModInfo(modName, modVersion, modAuthor, mainClassName, dependencies, modFile);
+            modInfo.setState(ModState.LOADED);
             availableMods.put(modName, modInfo);
             plugin.getLogger().info("Scanned mod: " + modName + " v" + modVersion + " by " + modAuthor);
 
@@ -165,31 +201,40 @@ public class ModLoaderService {
         }
 
         for (ModInfo mod : availableMods.values()) {
+            if (mod.getState() == ModState.ERRORED) {
+                continue;
+            }
             for (Map.Entry<String, String> dependency : mod.getDependencies().entrySet()) {
                 String dependencyName = dependency.getKey();
                 String requiredVersionRange = dependency.getValue();
 
                 if (!availableMods.containsKey(dependencyName)) {
-                    throw new Exception("Mod '" + mod.getName() + "' depends on unknown mod '" + dependencyName + "'");
+                    plugin.getLogger().severe("Mod '" + mod.getName() + "' depends on unknown mod '" + dependencyName + "'. Marking as ERRORED.");
+                    mod.setState(ModState.ERRORED);
+                    break;
                 }
 
                 ModInfo dependencyMod = availableMods.get(dependencyName);
                 com.github.zafarkhaja.semver.Version dependencyVersion = com.github.zafarkhaja.semver.Version.valueOf(dependencyMod.getVersion());
 
                 if (!dependencyVersion.satisfies(requiredVersionRange)) {
-                    throw new Exception("Mod '" + mod.getName() + "' requires version " + requiredVersionRange + " of mod '" + dependencyName + "', but version " + dependencyMod.getVersion() + " is present.");
+                    plugin.getLogger().severe("Mod '" + mod.getName() + "' requires version " + requiredVersionRange + " of mod '" + dependencyName + "', but version " + dependencyMod.getVersion() + " is present. Marking as ERRORED.");
+                    mod.setState(ModState.ERRORED);
+                    break;
                 }
 
-                graph.get(dependencyName).add(mod.getName());
-                inDegree.put(mod.getName(), inDegree.get(mod.getName()) + 1);
+                if (mod.getState() != ModState.ERRORED) {
+                    graph.get(dependencyName).add(mod.getName());
+                    inDegree.put(mod.getName(), inDegree.get(mod.getName()) + 1);
+                }
             }
         }
 
         LinkedList<ModInfo> queue = new LinkedList<>();
         for (ModInfo mod : availableMods.values()) {
-            if (inDegree.get(mod.getName()) == 0) {
+            if (mod.getState() != ModState.ERRORED && inDegree.get(mod.getName()) == 0) {
                 queue.add(mod);
-            } else {
+            } else if (mod.getState() != ModState.ERRORED) {
                 plugin.getLogger().info("Mod '" + mod.getName() + "' has in-degree " + inDegree.get(mod.getName()) + ".");
             }
         }
@@ -217,32 +262,70 @@ public class ModLoaderService {
         }
 
         for (ModInfo modInfo : loadOrder) {
+            if (modInfo.getState() == ModState.ERRORED) {
+                plugin.getLogger().warning("Skipping errored mod: " + modInfo.getName());
+                continue;
+            }
+
             plugin.getLogger().info("Loading mod: " + modInfo.getName() + " v" + modInfo.getVersion());
-            loadModloader999(modInfo);
-        }
-    }
 
 
-    private void loadModloader999(ModInfo modInfo) throws Exception {
-        URL[] urls = {modInfo.getModFile().toURI().toURL()};
-        URLClassLoader classLoader = new URLClassLoader(urls, plugin.getClass().getClassLoader());
-        modInfo.setClassLoader(classLoader);
+            URL[] urls = {modInfo.getModFile().toURI().toURL()};
+            URLClassLoader classLoader = new URLClassLoader(urls, plugin.getClass().getClassLoader());
+            modInfo.setClassLoader(classLoader);
 
-        try (JarFile jarFile = new JarFile(modInfo.getModFile())) {
+            try (JarFile jarFile = new JarFile(modInfo.getModFile())) {
+                for (JarEntry entry : Collections.list(jarFile.entries())) {
+                    if (entry.getName().endsWith(".class")) {
+                        String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - 6);
+                        Class<?> clazz = classLoader.loadClass(className);
+                        if (clazz.isAnnotationPresent(API.class)) {
+                            plugin.getLogger().info("Found API class: " + clazz.getName() + " in mod " + modInfo.getName());
+                            modAPIRegistry.registerAPI((Class<Object>) clazz, clazz.getDeclaredConstructor().newInstance());
+                        }
+                    }
+                }
+            }
+
             Class<?> mainClass = classLoader.loadClass(modInfo.getMainClass());
             if (ModInitializer.class.isAssignableFrom(mainClass) && !mainClass.isInterface()) {
                 plugin.getLogger().info("Found ModInitializer: " + mainClass.getName() + " for mod " + modInfo.getName());
+                Binder binder = new Binder();
+                ModInjector injector = new ModInjector(binder, modAPIRegistry);
                 ModInitializer modInitializer = (ModInitializer) mainClass.getDeclaredConstructor().newInstance();
+                modInitializer.configure(binder);
                 modInfo.setInitializer(modInitializer);
-
-                modInitializer.onLoad(modAPI);
-                modInitializer.onEnable();
-                plugin.getLogger().info("Mod " + modInfo.getName() + " initialized and enabled.");
+                modInfo.setState(ModState.LOADED);
             } else {
-                plugin.getLogger().warning("Main class " + modInfo.getMainClass() + " in mod " + modInfo.getName() + " does not implement ModInitializer. Skipping.");
+                plugin.getLogger().warning("Main class " + modInfo.getMainClass() + " in mod " + modInfo.getName() + " does not implement ModInitializer. Marking as ERRORED.");
+                modInfo.setState(ModState.ERRORED);
+            }
+
+
+            try {
+                modInfo.setState(ModState.INITIALIZING);
+                modConfigManager.loadModConfig(modInfo);
+                ModAPI modAPI = new ModAPIImpl(plugin, itemRegistry, mobRegistry, blockRegistry, commandRegistry, eventListenerRegistry, recipeRegistry, worldGeneratorRegistry, customEnchantmentAPIImpl, customPotionEffectAPIImpl, customWorldGeneratorAPIImpl, modConfigManager, modMessageAPIImpl, assetManager, modInfo.getName(), modInfo.getClassLoader(), eventBus);
+                modInfo.getInitializer().onPreLoad(modAPI);
+                modInfo.getInitializer().onLoad(modAPI);
+                modInfo.getInitializer().onPostLoad(modAPI);
+                plugin.getLogger().info("Mod " + modInfo.getName() + " initialized.");
+
+                modInfo.setState(ModState.ENABLED);
+                modInfo.getInitializer().onEnable();
+                plugin.getLogger().info("Mod " + modInfo.getName() + " enabled.");
+
+                if (!loadOrder.contains(modInfo)) {
+                    loadOrder.add(modInfo);
+                }
+            } catch (Throwable e) {
+                plugin.getLogger().severe("Failed to load or enable mod " + modInfo.getName() + ": " + e.getMessage());
+                e.printStackTrace();
+                modInfo.setState(ModState.ERRORED);
             }
         }
     }
+    
 
     private void extractResource(String resourcePath, InputStream inputStream) {
         File outputFile = new File(resourceStagingDir, resourcePath);
@@ -263,19 +346,33 @@ public class ModLoaderService {
     }
 
     public void disableMods() {
-        Collections.reverse(loadOrder);
-        for (ModInfo modInfo : loadOrder) {
-            plugin.getLogger().info("Disabling mod: " + modInfo.getName());
-            try {
-                if (modInfo.getInitializer() != null) {
-                    modInfo.getInitializer().onDisable();
+        List<ModInfo> modsToDisable = new ArrayList<>(loadOrder);
+        Collections.reverse(modsToDisable);
+
+        for (ModInfo modInfo : modsToDisable) {
+            if (modInfo.getState() == ModState.ENABLED || modInfo.getState() == ModState.ERRORED) {
+                plugin.getLogger().info("Disabling mod: " + modInfo.getName());
+                modInfo.setState(ModState.DISABLING);
+                try {
+                    if (modInfo.getInitializer() != null) {
+                        modInfo.getInitializer().onPreDisable();
+                        modInfo.getInitializer().onDisable();
+                        modInfo.getInitializer().onPostDisable();
+                    }
+                    modConfigManager.unloadModConfig(modInfo.getName());
+                    commandRegistry.unregisterAll(modInfo.getName());
+                    eventListenerRegistry.unregisterAll(modInfo.getName());
+                    modMessageAPIImpl.unregisterAllHandlersForMod(modInfo.getName());
+                    assetManager.unregisterAllAssetsForMod(modInfo.getName());
+                    if (modInfo.getClassLoader() != null) {
+                        modInfo.getClassLoader().close();
+                    }
+                    modInfo.setState(ModState.DISABLED);
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Error disabling mod " + modInfo.getName() + ": " + e.getMessage());
+                    e.printStackTrace();
+                    modInfo.setState(ModState.ERRORED);
                 }
-                if (modInfo.getClassLoader() != null) {
-                    modInfo.getClassLoader().close();
-                }
-            } catch (Exception e) {
-                plugin.getLogger().severe("Error disabling mod " + modInfo.getName());
-                e.printStackTrace();
             }
         }
         loadOrder.clear();
@@ -283,14 +380,17 @@ public class ModLoaderService {
         commandRegistry.unregisterAll();
         eventListenerRegistry.unregisterAll();
         recipeRegistry.unregisterAll();
-        ((com.example.modloader.api.CustomEnchantmentAPIImpl) modAPI.getCustomEnchantmentAPI()).unregisterAll();
-        ((com.example.modloader.api.CustomPotionEffectAPIImpl) modAPI.getCustomPotionEffectAPI()).unregisterAll();
-        ((com.example.modloader.api.CustomWorldGeneratorAPIImpl) modAPI.getCustomWorldGeneratorAPI()).unregisterAll();
+        customEnchantmentAPIImpl.unregisterAll();
+        customPotionEffectAPIImpl.unregisterAll();
+        customWorldGeneratorAPIImpl.unregisterAll();
+
+        if (messageDispatchTask != null) {
+            messageDispatchTask.cancel();
+            plugin.getLogger().info("Message dispatch task cancelled.");
+        }
     }
 
-    public ModAPI getModAPI() {
-        return modAPI;
-    }
+
 
     public List<ModInfo> getLoadedModsInfo() {
         return Collections.unmodifiableList(loadOrder);
@@ -312,36 +412,48 @@ public class ModLoaderService {
         return availableMods.get(modName);
     }
 
+    public ResourcePackGenerator getResourcePackGenerator() {
+        return resourcePackGenerator;
+    }
+
     public void unloadMod(String modName) throws Exception {
-        ModInfo modToUnload = null;
-        for (ModInfo mod : loadOrder) {
-            if (mod.getName().equals(modName)) {
-                modToUnload = mod;
-                break;
-            }
-        }
-
+        ModInfo modToUnload = getModInfo(modName);
         if (modToUnload == null) {
-            throw new IllegalArgumentException("Mod '" + modName + "' is not currently loaded.");
+            throw new IllegalArgumentException("Mod '" + modName + "' not found.");
+        }
+
+        if (modToUnload.getState() != ModState.ENABLED && modToUnload.getState() != ModState.ERRORED) {
+            throw new IllegalStateException("Mod '" + modName + "' is not currently enabled or errored. Current state: " + modToUnload.getState());
         }
 
         for (ModInfo mod : loadOrder) {
-            if (mod.getDependencies().keySet().contains(modName)) {
-                throw new IllegalStateException("Mod '" + mod.getName() + "' depends on '" + modName + "'. Cannot unload.");
+            if (mod.getState() == ModState.ENABLED && mod.getDependencies().containsKey(modName)) {
+                throw new IllegalStateException("Mod '" + mod.getName() + "' depends on '" + modName + "'. Cannot unload '" + modName + "' while '" + mod.getName() + "' is enabled.");
             }
         }
 
         try {
             plugin.getLogger().info("Unloading mod: " + modToUnload.getName());
+            modToUnload.setState(ModState.DISABLING);
             if (modToUnload.getInitializer() != null) {
                 modToUnload.getInitializer().onDisable();
             }
+            modConfigManager.unloadModConfig(modToUnload.getName());
+            commandRegistry.unregisterAll(modToUnload.getName());
+            eventListenerRegistry.unregisterAll(modToUnload.getName());
+            modMessageAPIImpl.unregisterAllHandlersForMod(modToUnload.getName());
+            assetManager.unregisterAllAssetsForMod(modToUnload.getName());
             if (modToUnload.getClassLoader() != null) {
                 modToUnload.getClassLoader().close();
             }
             loadOrder.remove(modToUnload);
+            availableMods.remove(modName);
+            modToUnload.setState(ModState.UNLOADED);
             plugin.getLogger().info("Mod '" + modName + "' unloaded successfully!");
         } catch (Exception e) {
+            modToUnload.setState(ModState.ERRORED);
+            plugin.getLogger().severe("Error unloading mod " + modToUnload.getName() + ": " + e.getMessage());
+            e.printStackTrace();
             throw e;
         }
     }
@@ -351,17 +463,56 @@ public class ModLoaderService {
         if (modToLoad == null) {
             throw new IllegalArgumentException("Mod '" + modName + "' not found.");
         }
-        if (isModEnabled(modName)) {
-            throw new IllegalStateException("Mod '" + modName + "' is already loaded.");
+
+        if (modToLoad.getState() == ModState.LOADED || modToLoad.getState() == ModState.INITIALIZING || modToLoad.getState() == ModState.ENABLED) {
+            throw new IllegalStateException("Mod '" + modName + "' is already loaded or enabled. Current state: " + modToLoad.getState());
+        }
+        if (modToLoad.getState() == ModState.ERRORED) {
+            throw new IllegalStateException("Mod '" + modName + "' is in an ERRORED state and cannot be loaded.");
         }
 
-        loadOrder.add(modToLoad);
+        if (modToLoad.getState() == ModState.DISABLED) {
+            modToLoad.setState(ModState.LOADED);
+            plugin.getLogger().info("Mod '" + modName + "' state changed from DISABLED to LOADED.");
+            return;
+        }
 
         try {
-            loadModloader999(modToLoad);
-            plugin.getLogger().info("Mod '" + modName + "' loaded successfully!");
+                        URL[] urls = {modToLoad.getModFile().toURI().toURL()};
+            URLClassLoader classLoader = new URLClassLoader(urls, plugin.getClass().getClassLoader());
+            modToLoad.setClassLoader(classLoader);
+
+            try (JarFile jarFile = new JarFile(modToLoad.getModFile())) {
+                for (JarEntry entry : Collections.list(jarFile.entries())) {
+                    if (entry.getName().endsWith(".class")) {
+                        String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - 6);
+                        Class<?> clazz = classLoader.loadClass(className);
+                        if (clazz.isAnnotationPresent(API.class)) {
+                            plugin.getLogger().info("Found API class: " + clazz.getName() + " in mod " + modToLoad.getName());
+                            modAPIRegistry.registerAPI((Class<Object>) clazz, clazz.getDeclaredConstructor().newInstance());
+                        }
+                    }
+                }
+            }
+
+            Class<?> mainClass = classLoader.loadClass(modToLoad.getMainClass());
+            if (ModInitializer.class.isAssignableFrom(mainClass) && !mainClass.isInterface()) {
+                plugin.getLogger().info("Found ModInitializer: " + mainClass.getName() + " for mod " + modToLoad.getName());
+                Binder binder = new Binder();
+                ModInjector injector = new ModInjector(binder, modAPIRegistry);
+                ModInitializer modInitializer = (ModInitializer) mainClass.getDeclaredConstructor().newInstance();
+                modInitializer.configure(binder);
+                modToLoad.setInitializer(modInitializer);
+                modToLoad.setState(ModState.LOADED);
+            } else {
+                plugin.getLogger().warning("Main class " + modToLoad.getMainClass() + " in mod " + modToLoad.getName() + " does not implement ModInitializer. Marking as ERRORED.");
+                modToLoad.setState(ModState.ERRORED);
+            }
+            plugin.getLogger().info("Mod '" + modToLoad.getName() + "' classes loaded successfully!");
         } catch (Exception e) {
-            loadOrder.remove(modToLoad);
+            modToLoad.setState(ModState.ERRORED);
+            plugin.getLogger().severe("Error loading classes for mod " + modToLoad.getName() + ": " + e.getMessage());
+            e.printStackTrace();
             throw e;
         }
     }
@@ -371,52 +522,156 @@ public class ModLoaderService {
         if (modToEnable == null) {
             throw new IllegalArgumentException("Mod '" + modName + "' not found.");
         }
-        if (isModEnabled(modName)) {
+
+        if (modToEnable.getState() == ModState.ENABLED) {
             throw new IllegalStateException("Mod '" + modName + "' is already enabled.");
         }
-
-        loadOrder.add(modToEnable);
+        if (modToEnable.getState() == ModState.ERRORED) {
+            throw new IllegalStateException("Mod '" + modName + "' is in an ERRORED state and cannot be enabled.");
+        }
 
         try {
-            loadModloader999(modToEnable);
+            recursivelyEnableMod(modToEnable, new HashSet<>());
             plugin.getLogger().info("Mod '" + modName + "' enabled successfully!");
         } catch (Exception e) {
-            loadOrder.remove(modToEnable);
+            plugin.getLogger().severe("Error enabling mod " + modToEnable.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            modToEnable.setState(ModState.ERRORED);
             throw e;
         }
     }
 
     public void disableMod(String modName) throws Exception {
-        ModInfo modToDisable = null;
-        for (ModInfo mod : loadOrder) {
-            if (mod.getName().equals(modName)) {
-                modToDisable = mod;
-                break;
-            }
-        }
-
+        ModInfo modToDisable = getModInfo(modName);
         if (modToDisable == null) {
-            throw new IllegalArgumentException("Mod '" + modName + "' is not currently enabled.");
+            throw new IllegalArgumentException("Mod '" + modName + "' not found.");
+        }
+
+        if (modToDisable.getState() != ModState.ENABLED && modToDisable.getState() != ModState.ERRORED) {
+            throw new IllegalStateException("Mod '" + modName + "' is not currently enabled or errored. Current state: " + modToDisable.getState());
         }
 
         for (ModInfo mod : loadOrder) {
-            if (mod.getDependencies().keySet().contains(modName)) {
-                throw new IllegalStateException("Mod '" + mod.getName() + "' depends on '" + modName + "'. Cannot disable.");
+            if (mod.getState() == ModState.ENABLED && mod.getDependencies().containsKey(modName)) {
+                throw new IllegalStateException("Mod '" + mod.getName() + "' depends on '" + modName + "'. Cannot disable '" + modName + "' while '" + mod.getName() + "' is enabled.");
             }
         }
 
         try {
             plugin.getLogger().info("Disabling mod: " + modToDisable.getName());
+            modToDisable.setState(ModState.DISABLING);
             if (modToDisable.getInitializer() != null) {
+                modToDisable.getInitializer().onPreDisable();
                 modToDisable.getInitializer().onDisable();
+                modToDisable.getInitializer().onPostDisable();
             }
+            modConfigManager.unloadModConfig(modToDisable.getName());
+            commandRegistry.unregisterAll(modToDisable.getName());
+            eventListenerRegistry.unregisterAll(modToDisable.getName());
+            modMessageAPIImpl.unregisterAllHandlersForMod(modToDisable.getName());
+            assetManager.unregisterAllAssetsForMod(modToDisable.getName());
             if (modToDisable.getClassLoader() != null) {
                 modToDisable.getClassLoader().close();
             }
             loadOrder.remove(modToDisable);
-            plugin.getLogger().info("Mod '" + modName + "' disabled successfully.");
+            availableMods.remove(modName);
+            modToDisable.setState(ModState.UNLOADED);
+            plugin.getLogger().info("Mod '" + modName + "' unloaded successfully!");
         } catch (Exception e) {
+            modToDisable.setState(ModState.ERRORED);
+            plugin.getLogger().severe("Error unloading mod " + modToDisable.getName() + ": " + e.getMessage());
+            e.printStackTrace();
             throw e;
+        }
+    }
+
+    private void recursivelyEnableMod(ModInfo modInfo, Set<String> enablingStack) throws Exception {
+        if (modInfo.getState() == ModState.ENABLED) {
+            return;
+        }
+        if (modInfo.getState() == ModState.ERRORED) {
+            throw new IllegalStateException("Cannot enable mod '" + modInfo.getName() + "' because it is in an ERRORED state.");
+        }
+
+        if (enablingStack.contains(modInfo.getName())) {
+            throw new IllegalStateException("Circular dependency detected involving mod '" + modInfo.getName() + "'.");
+        }
+        enablingStack.add(modInfo.getName());
+
+        for (Map.Entry<String, String> dependencyEntry : modInfo.getDependencies().entrySet()) {
+            String dependencyName = dependencyEntry.getKey();
+            ModInfo dependencyMod = availableMods.get(dependencyName);
+
+            if (dependencyMod == null) {
+                throw new IllegalStateException("Mod '" + modInfo.getName() + "' depends on unknown mod '" + dependencyName + "'.");
+            }
+
+            if (dependencyMod.getState() != ModState.ENABLED) {
+                recursivelyEnableMod(dependencyMod, enablingStack);
+            }
+        }
+
+        try {
+            if (modInfo.getState() == ModState.UNLOADED || modInfo.getState() == ModState.DISABLED) {
+
+                URL[] urls = {modInfo.getModFile().toURI().toURL()};
+                URLClassLoader classLoader = new URLClassLoader(urls, plugin.getClass().getClassLoader());
+                modInfo.setClassLoader(classLoader);
+
+                try (JarFile jarFile = new JarFile(modInfo.getModFile())) {
+                    for (JarEntry entry : Collections.list(jarFile.entries())) {
+                        if (entry.getName().endsWith(".class")) {
+                            String className = entry.getName().replace('/', '.').substring(0, entry.getName().length() - 6);
+                            Class<?> clazz = classLoader.loadClass(className);
+                            if (clazz.isAnnotationPresent(API.class)) {
+                                plugin.getLogger().info("Found API class: " + clazz.getName() + " in mod " + modInfo.getName());
+                                modAPIRegistry.registerAPI((Class<Object>) clazz, clazz.getDeclaredConstructor().newInstance());
+                            }
+                        }
+                    }
+                }
+
+                Class<?> mainClass = classLoader.loadClass(modInfo.getMainClass());
+                if (ModInitializer.class.isAssignableFrom(mainClass) && !mainClass.isInterface()) {
+                    plugin.getLogger().info("Found ModInitializer: " + mainClass.getName() + " for mod " + modInfo.getName());
+                    Binder binder = new Binder();
+                    ModInjector injector = new ModInjector(binder, modAPIRegistry);
+                    ModInitializer modInitializer = (ModInitializer) mainClass.getDeclaredConstructor().newInstance();
+                    modInitializer.configure(binder);
+                    modInfo.setInitializer(modInitializer);
+                    modInfo.setState(ModState.LOADED);
+                } else {
+                    plugin.getLogger().warning("Main class " + modInfo.getMainClass() + " in mod " + modInfo.getName() + " does not implement ModInitializer. Marking as ERRORED.");
+                    modInfo.setState(ModState.ERRORED);
+                }
+            }
+
+            if (modInfo.getState() == ModState.LOADED) {
+                modInfo.setState(ModState.INITIALIZING);
+                modConfigManager.loadModConfig(modInfo);
+                ModAPI modAPI = new ModAPIImpl(plugin, itemRegistry, mobRegistry, blockRegistry, commandRegistry, eventListenerRegistry, recipeRegistry, worldGeneratorRegistry, customEnchantmentAPIImpl, customPotionEffectAPIImpl, customWorldGeneratorAPIImpl, modConfigManager, modMessageAPIImpl, assetManager, modInfo.getName(), modInfo.getClassLoader(), eventBus);
+                modInfo.getInitializer().onPreLoad(modAPI);
+                modInfo.getInitializer().onLoad(modAPI);
+                modInfo.getInitializer().onPostLoad(modAPI);
+                plugin.getLogger().info("Mod " + modInfo.getName() + " initialized.");
+
+                modInfo.setState(ModState.ENABLED);
+                modInfo.getInitializer().onEnable();
+                plugin.getLogger().info("Mod " + modInfo.getName() + " enabled.");
+
+                if (!loadOrder.contains(modInfo)) {
+                    loadOrder.add(modInfo);
+                }
+            } else {
+                throw new IllegalStateException("Unexpected state for mod '" + modInfo.getName() + "' during enabling: " + modInfo.getState());
+            }
+        } catch (Exception e) {
+            modInfo.setState(ModState.ERRORED);
+            plugin.getLogger().severe("Error enabling mod " + modInfo.getName() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        } finally {
+            enablingStack.remove(modInfo.getName());
         }
     }
 

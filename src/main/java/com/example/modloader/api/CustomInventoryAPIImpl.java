@@ -55,7 +55,7 @@ public class CustomInventoryAPIImpl implements CustomInventoryAPI {
         return inventory.getItem(slot);
     }
 
-    // Internal methods for event handling (called by the listener)
+
     public void handleClick(InventoryClickEvent event) {
         Consumer<InventoryClickEvent> handler = clickHandlers.get(event.getInventory());
         if (handler != null) {

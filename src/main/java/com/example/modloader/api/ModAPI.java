@@ -3,6 +3,9 @@ package com.example.modloader.api;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import com.example.modloader.CustomCommandRegistry;
+import com.example.modloader.api.event.EventBus;
+import com.example.modloader.api.permissions.Permissions;
+import com.example.modloader.api.network.Networking;
 
 public interface ModAPI {
 
@@ -32,61 +35,31 @@ public interface ModAPI {
 
     com.example.modloader.CustomMobRegistry getCustomMobRegistry();
 
-    /**
-     * Provides access to the Custom Inventory API for creating and managing custom GUIs.
-     *
-     * @return The CustomInventoryAPI instance.
-     */
     CustomInventoryAPI getCustomInventoryAPI();
 
-    /**
-     * Provides access to the Custom Particle API for spawning custom particle effects.
-     *
-     * @return The CustomParticleAPI instance.
-     */
     CustomParticleAPI getCustomParticleAPI();
 
-    /**
-     * Provides access to the Custom Sound API for playing custom sound effects.
-     *
-     * @return The CustomSoundAPI instance.
-     */
     CustomSoundAPI getCustomSoundAPI();
 
-    /**
-     * Provides access to the Custom Enchantment API for registering and managing custom enchantments.
-     *
-     * @return The CustomEnchantmentAPI instance.
-     */
     CustomEnchantmentAPI getCustomEnchantmentAPI();
 
-    /**
-     * Provides access to the Custom Potion Effect API for registering and managing custom potion effects.
-     *
-     * @return The CustomPotionEffectAPI instance.
-     */
     CustomPotionEffectAPI getCustomPotionEffectAPI();
 
-    /**
-     * Provides access to the Custom World Generator API for registering and managing custom chunk generators.
-     *
-     * @return The CustomWorldGeneratorAPI instance.
-     */
     CustomWorldGeneratorAPI getCustomWorldGeneratorAPI();
 
-    /**
-     * Provides access to the Dimension API for creating and managing worlds/dimensions.
-     *
-     * @return The DimensionAPI instance.
-     */
     DimensionAPI getDimensionAPI();
 
-    /**
-     * Provides access to the Custom Structure API for loading and spawning custom structures.
-     *
-     * @return The CustomStructureAPI instance.
-     */
     CustomStructureAPI getCustomStructureAPI();
+
+    org.bukkit.configuration.file.YamlConfiguration getModConfig(String modId);
+
+    ModMessageAPI getModMessageAPI();
+
+    CustomAssetAPI getCustomAssetAPI();
+    
+    EventBus getEventBus();
+
+    Permissions getPermissions();
+
+    Networking getNetworking();
 }
-
-

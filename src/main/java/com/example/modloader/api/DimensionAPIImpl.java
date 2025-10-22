@@ -48,7 +48,7 @@ public class DimensionAPIImpl implements DimensionAPI {
         }
 
         WorldCreator creator = new WorldCreator(worldName);
-        world = creator.createWorld(); // createWorld also loads if it exists
+world = creator.createWorld();
         if (world != null) {
             plugin.getLogger().info("Loaded world: " + worldName);
         } else {

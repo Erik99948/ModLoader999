@@ -32,13 +32,11 @@ public class CustomEnchantmentAPIImpl implements CustomEnchantmentAPI {
         try {
             Field keyField = Enchantment.class.getDeclaredField("byKey");
             keyField.setAccessible(true);
-            @SuppressWarnings("unchecked")
             Map<org.bukkit.NamespacedKey, Enchantment> byKey = (Map<org.bukkit.NamespacedKey, Enchantment>) keyField.get(null);
             byKey.put(enchantment.getKey(), enchantment);
 
             Field nameField = Enchantment.class.getDeclaredField("byName");
             nameField.setAccessible(true);
-            @SuppressWarnings("unchecked")
             Map<String, Enchantment> byName = (Map<String, Enchantment>) nameField.get(null);
             byName.put(enchantment.getName(), enchantment);
 
@@ -67,17 +65,14 @@ public class CustomEnchantmentAPIImpl implements CustomEnchantmentAPI {
         return null;
     }
 
-    // Method to unregister all custom enchantments (useful on plugin disable)
     public void unregisterAll() {
         try {
             Field keyField = Enchantment.class.getDeclaredField("byKey");
             keyField.setAccessible(true);
-            @SuppressWarnings("unchecked")
             Map<org.bukkit.NamespacedKey, Enchantment> byKey = (Map<org.bukkit.NamespacedKey, Enchantment>) keyField.get(null);
 
             Field nameField = Enchantment.class.getDeclaredField("byName");
             nameField.setAccessible(true);
-            @SuppressWarnings("unchecked")
             Map<String, Enchantment> byName = (Map<String, Enchantment>) nameField.get(null);
 
             for (CustomEnchantment enchantment : registeredEnchantments.values()) {

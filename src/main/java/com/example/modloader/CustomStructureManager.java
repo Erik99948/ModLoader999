@@ -16,8 +16,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 
-// Placeholder for NBT structure data. In a real scenario, this would be loaded from an .nbt file.
-// For now, we'll represent a simple structure as a map of relative vectors to BlockData.
 class SimpleStructure {
     private final Map<Vector, BlockData> blocks = new HashMap<>();
     private final Vector size;
@@ -48,23 +46,13 @@ public class CustomStructureManager {
         this.plugin = plugin;
     }
 
-    /**
-     * Loads a structure from a placeholder definition.
-     * In a real implementation, this would load from an .nbt file.
-     *
-     * @param structureId The ID to register the structure under.
-     * @param structureFile The file containing the structure data (currently unused, placeholder).
-     * @return true if loaded successfully, false otherwise.
-     */
     public boolean loadStructure(String structureId, File structureFile) {
-        // Placeholder: In a real scenario, parse structureFile (e.g., .nbt)
-        // For demonstration, we'll create a simple hardcoded structure.
         if (loadedStructures.containsKey(structureId)) {
             plugin.getLogger().warning("Structure with ID '" + structureId + "' already loaded.");
             return false;
         }
 
-        SimpleStructure simpleStructure = new SimpleStructure(new Vector(3, 3, 3)); // Example size
+        SimpleStructure simpleStructure = new SimpleStructure(new Vector(3, 3, 3));
         simpleStructure.setBlock(0, 0, 0, Material.STONE);
         simpleStructure.setBlock(1, 0, 0, Material.STONE);
         simpleStructure.setBlock(0, 0, 1, Material.STONE);
@@ -84,17 +72,6 @@ public class CustomStructureManager {
         return true;
     }
 
-    /**
-     * Spawns a loaded structure at a given location.
-     *
-     * @param structureId The ID of the structure to spawn.
-     * @param location The base location to spawn the structure.
-     * @param random A random instance for potential random elements (e.g., rotation, integrity).
-     * @param rotation The rotation of the structure (0, 90, 180, 270 degrees).
-     * @param mirror Whether to mirror the structure.
-     * @param integrity The integrity of the structure (0.0 to 1.0, for partial generation).
-     * @return true if the structure was spawned, false if not found.
-     */
     public boolean spawnStructure(String structureId, Location location, Random random, int rotation, boolean mirror, float integrity) {
         SimpleStructure structure = loadedStructures.get(structureId);
         if (structure == null) {
@@ -108,13 +85,12 @@ public class CustomStructureManager {
             return false;
         }
 
-        // Simple spawning logic (no rotation/mirror/integrity implemented for placeholder)
         for (Map.Entry<Vector, BlockData> entry : structure.getBlocks().entrySet()) {
             Vector relativePos = entry.getKey();
             BlockData blockData = entry.getValue();
 
             Location targetLocation = location.clone().add(relativePos.getX(), relativePos.getY(), relativePos.getZ());
-            targetLocation.getBlock().setBlockData(blockData, false); // false to not apply physics
+            targetLocation.getBlock().setBlockData(blockData, false);
         }
 
         plugin.getLogger().info("Spawned structure '" + structureId + "' at " + location.toVector());

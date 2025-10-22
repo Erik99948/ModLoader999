@@ -6,7 +6,6 @@ import java.io.File;
 public final class ModLoader extends JavaPlugin {
 
     private ModLoaderService modLoaderService;
-    private ResourcePackGenerator resourcePackGenerator;
     private WebServer webServer;
 
     @Override
@@ -24,11 +23,10 @@ public final class ModLoader extends JavaPlugin {
         }
 
         this.modLoaderService = new ModLoaderService(this);
-        this.resourcePackGenerator = new ResourcePackGenerator(this);
 
         this.modLoaderService.loadModsAndGeneratePack();
 
-        if (!this.resourcePackGenerator.generate()) {
+        if (!this.modLoaderService.getResourcePackGenerator().generate()) {
             getLogger().severe("Could not generate resource pack. Aborting resource pack server startup.");
             return;
         }
@@ -36,16 +34,10 @@ public final class ModLoader extends JavaPlugin {
         saveDefaultConfig();
         int webServerPort = getConfig().getInt("web-server-port", 25566);
 
-        this.webServer = new WebServer(this, this.resourcePackGenerator.getZipFile(), webServerPort);
+        this.webServer = new WebServer(this, this.modLoaderService.getResourcePackGenerator().getZipFile(), webServerPort);
         this.webServer.start();
 
-        getServer().getPluginManager().registerEvents(new PlayerJoinListener(this, webServer, resourcePackGenerator), this);
 
-        // Register CustomInventoryListener
-        new CustomInventoryListener((com.example.modloader.api.CustomInventoryAPIImpl) modLoaderService.getModAPI().getCustomInventoryAPI(), this);
-
-        getCommand("modloader").setExecutor(new ModLoaderCommandExecutor(this, modLoaderService));
-        getCommand("modloader").setTabCompleter(new ModLoaderCommandExecutor(this, modLoaderService));
     }
 
     @Override

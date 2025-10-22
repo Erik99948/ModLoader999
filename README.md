@@ -10,7 +10,14 @@ Welcome to the official documentation for ModLoader999, a powerful PaperMC plugi
 2.  **Install:** Place the downloaded `.jar` file into your server's `plugins` folder.
 3.  **Restart:** Start or restart your server to generate the necessary configuration files and folders.
 4.  **Add Mods:** Place your desired mod files (with a `.modloader999` extension) into the `plugins/ModLoader999/Mods/` directory.
-5.  **Reload:** Restart your server or use the command `/modloader reload` to load the new mods.
+5.  **Manage Mods:** Use the following in-game commands (requires appropriate permissions):
+    *   `/modloader list`: List all loaded and available mods with their status.
+    *   `/modloader info <modName>`: Show detailed information about a specific mod, including its dependencies and current state.
+    *   `/modloader reload`: Reload all mods, disabling and then re-enabling them based on their dependencies.
+    *   `/modloader enable <modName>`: Enable a previously disabled or unloaded mod, resolving its dependencies.
+    *   `/modloader disable <modName>`: Disable an enabled mod. Dependent mods will prevent disabling.
+    *   `/modloader load <modName>`: Load the classes of a mod without enabling it (useful for debugging or specific scenarios).
+    *   `/modloader unload <modName>`: Unload a mod completely from memory. Dependent mods will prevent unloading.
 
 ## For Mod Developers
 
@@ -99,9 +106,118 @@ Every mod must contain a `modinfo.json` file in the `src/main/resources` directo
 *   `author`: Your name.
 *   `dependencies` (Optional): A map of other mods that your mod depends on, with their required version range.
 
+### Dependency Injection
+
+ModLoader999 uses a dependency injection system to manage dependencies between mods and within a single mod. You can inject your own classes and classes from other mods that are exposed as APIs.
+
+#### Intra-mod Dependencies
+
+To inject a dependency within your own mod, you need to bind it in the `configure` method of your `ModInitializer` and then use constructor injection to get the instance.
+
+**Greeter.java:**
+```java
+package com.example.mod;
+
+public class Greeter {
+    public String getGreeting() {
+        return "Hello from the Greeter class!";
+    }
+}
+```
+
+**MyMod.java:**
+```java
+package com.example.mod;
+
+import com.example.modloader.api.ModAPI;
+import com.example.modloader.api.ModInitializer;
+import com.example.modloader.api.dependencyinjection.Binder;
+
+public class MyMod implements ModInitializer {
+
+    private final Greeter greeter;
+
+    public MyMod(Greeter greeter) {
+        this.greeter = greeter;
+    }
+
+    @Override
+    public void configure(Binder binder) {
+        binder.bind(Greeter.class, new Greeter());
+    }
+
+    @Override
+    public void onLoad(ModAPI api) {
+        System.out.println(greeter.getGreeting());
+    }
+    // ... other methods
+}
+```
+
+#### Inter-mod Dependencies
+
+To use an API from another mod, you first need to declare the dependency in your `modinfo.json` file. Then, you can inject the API class using constructor injection. The other mod needs to expose the API using the `@API` annotation.
+
+**CoolMod's `CoolAPI.java`:**
+```java
+package com.example.coolmod;
+
+import com.example.modloader.api.dependencyinjection.API;
+
+@API
+public class CoolAPI {
+    public String getCoolMessage() {
+        return "This is a cool message from CoolMod!";
+    }
+}
+```
+
+**AwesomeMod's `modinfo.json`:**
+```json
+{
+  "main": "com.example.awesomemod.AwesomeMod",
+  "name": "AwesomeMod",
+  "version": "1.0.0",
+  "author": "YourName",
+  "dependencies": {
+    "CoolMod": "^1.0.0"
+  }
+}
+```
+
+**AwesomeMod's `AwesomeMod.java`:**
+```java
+package com.example.awesomemod;
+
+import com.example.coolmod.CoolAPI;
+import com.example.modloader.api.ModAPI;
+import com.example.modloader.api.ModInitializer;
+import com.example.modloader.api.dependencyinjection.Binder;
+
+public class AwesomeMod implements ModInitializer {
+
+    private final CoolAPI coolAPI;
+
+    public AwesomeMod(CoolAPI coolAPI) {
+        this.coolAPI = coolAPI;
+    }
+
+    @Override
+    public void configure(Binder binder) {
+        // No need to bind CoolAPI here, the ModInjector will find it in the ModAPIRegistry
+    }
+
+    @Override
+    public void onLoad(ModAPI api) {
+        System.out.println(coolAPI.getCoolMessage());
+    }
+    // ... other methods
+}
+```
+
 ### The `ModInitializer` Class
 
-Your mod's main class must implement the `ModInitializer` interface. The `onLoad` method is the entry point for your mod, where you will register all of your custom content.
+Your mod's main class must implement the `ModInitializer` interface. The `onLoad` method is the entry point for your mod, where you will register all of your custom content. The `ModAPI` instance provided to `onLoad` is unique to your mod, ensuring that all registrations (commands, listeners, etc.) are automatically associated with your mod's lifecycle.
 
 ```java
 package com.yourname.mod;
@@ -235,7 +351,7 @@ api.registerMobSpawner((world, random, block) -> {
 
 #### Custom Commands
 
-Register commands with tab completion support. Your `ModCommandExecutor` will handle both command execution and tab completion suggestions.
+Register commands with tab completion support. Your `ModCommandExecutor` will handle both command execution and tab completion suggestions. Commands registered this way are automatically associated with your mod and will be unregistered when your mod is disabled or unloaded.
 
 ```java
 // In onLoad(ModAPI api)
@@ -273,7 +389,7 @@ api.registerCommand("modhelp", new ModCommandExecutor() {
 
 #### Event Listeners
 
-Register standard Bukkit event listeners to react to in-game events. Any class implementing `org.bukkit.event.Listener` can be registered.
+Register standard Bukkit event listeners to react to in-game events. Any class implementing `org.bukkit.event.Listener` can be registered. Listeners registered this way are automatically associated with your mod and will be unregistered when your mod is disabled or unloaded.
 
 ```java
 // In onLoad(ModAPI api)
@@ -590,10 +706,34 @@ if (loaded) {
 // }
 ```
 
+### Mod Configuration
+
+Your mod can include a `config.yml` file in its `src/main/resources` directory. This file will be automatically extracted to `plugins/ModLoader999/configs/<your_mod_name>/config.yml` when your mod is loaded. You can access and modify this configuration using the `ModAPI`.
+
+```java
+// In onLoad(ModAPI api)
+YamlConfiguration config = api.getModConfig();
+
+// Get values from config
+String message = config.getString("welcome-message", "Hello from MyMod!");
+int maxItems = config.getInt("max-items", 10);
+
+// Set values (will be saved automatically on server shutdown or mod disable)
+config.set("last-loaded-time", System.currentTimeMillis());
+
+// Example: Register a listener that uses the config
+api.registerListener(new Listener() {
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        event.getPlayer().sendMessage(message);
+    }
+});
+```
+
 ### Building Your Mod
 
 1.  **Package:** Run `mvn package` or `gradle build` in your mod's project directory.
 2.  **Rename:** Locate the generated `.jar` file in your `target/` (Maven) or `build/libs/` (Gradle) folder. Rename its extension from `.jar` to `.modloader999` (e.g., `MyAwesomeMod-1.0.0.jar` becomes `MyAwesomeMod-1.0.0.modloader999`).
 3.  **Deploy:** Place the `.modloader999` file into the `plugins/ModLoader999/Mods/` folder on your Minecraft server.
-   
-5.  **Reload:** Restart your server or use `/modloader reload` to load your new mod.
+4.  **Reload:** Restart your server or use `/modloader reload` to load your new mod.
+

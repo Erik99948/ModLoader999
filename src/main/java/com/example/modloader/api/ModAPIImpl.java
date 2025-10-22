@@ -1,5 +1,6 @@
 package com.example.modloader.api;
 
+import com.example.modloader.AssetManager;
 import com.example.modloader.CustomBlockRegistry;
 import com.example.modloader.CustomCommandRegistry;
 import com.example.modloader.CustomEventListenerRegistry;
@@ -11,6 +12,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.Listener;
+
+import java.net.URLClassLoader;
+
+import com.example.modloader.api.event.EventBus;
+import com.example.modloader.api.permissions.Permissions;
+import com.example.modloader.api.network.Networking;
 
 public class ModAPIImpl implements ModAPI {
 
@@ -29,8 +36,15 @@ public class ModAPIImpl implements ModAPI {
     private final CustomWorldGeneratorAPI customWorldGeneratorAPI;
     private final DimensionAPI dimensionAPI;
     private final CustomStructureAPI customStructureAPI;
+    private final CustomAssetAPI customAssetAPI;
+    private final com.example.modloader.ModConfigManager modConfigManager;
+    private final ModMessageAPI modMessageAPI;
+    private final String modId;
+    private final EventBus eventBus;
+    private final Permissions permissions;
+    private final Networking networking;
 
-    public ModAPIImpl(JavaPlugin plugin, CustomItemRegistry itemRegistry, CustomMobRegistry mobRegistry, CustomBlockRegistry blockRegistry, CustomCommandRegistry commandRegistry, CustomEventListenerRegistry eventListenerRegistry, CustomRecipeRegistry recipeRegistry, CustomWorldGeneratorRegistry worldGeneratorRegistry) {
+    public ModAPIImpl(JavaPlugin plugin, CustomItemRegistry itemRegistry, CustomMobRegistry mobRegistry, CustomBlockRegistry blockRegistry, CustomCommandRegistry commandRegistry, CustomEventListenerRegistry eventListenerRegistry, CustomRecipeRegistry recipeRegistry, CustomWorldGeneratorRegistry worldGeneratorRegistry, CustomEnchantmentAPI customEnchantmentAPI, CustomPotionEffectAPI customPotionEffectAPI, CustomWorldGeneratorAPI customWorldGeneratorAPI, com.example.modloader.ModConfigManager modConfigManager, ModMessageAPI modMessageAPI, AssetManager assetManager, String modId, URLClassLoader modClassLoader, EventBus eventBus) {
         this.itemRegistry = itemRegistry;
         this.mobRegistry = mobRegistry;
         this.blockRegistry = blockRegistry;
@@ -41,11 +55,18 @@ public class ModAPIImpl implements ModAPI {
         this.customInventoryAPI = new CustomInventoryAPIImpl(plugin);
         this.customParticleAPI = new CustomParticleAPIImpl();
         this.customSoundAPI = new CustomSoundAPIImpl();
-        this.customEnchantmentAPI = new CustomEnchantmentAPIImpl(plugin);
-        this.customPotionEffectAPI = new CustomPotionEffectAPIImpl(plugin);
-        this.customWorldGeneratorAPI = new CustomWorldGeneratorAPIImpl(plugin);
+        this.customEnchantmentAPI = customEnchantmentAPI;
+        this.customPotionEffectAPI = customPotionEffectAPI;
+        this.customWorldGeneratorAPI = customWorldGeneratorAPI;
         this.dimensionAPI = new DimensionAPIImpl(plugin);
         this.customStructureAPI = new CustomStructureAPIImpl(plugin);
+        this.modConfigManager = modConfigManager;
+        this.modMessageAPI = modMessageAPI;
+        this.customAssetAPI = new CustomAssetAPIImpl(plugin, modId, modClassLoader, assetManager);
+        this.modId = modId;
+        this.eventBus = eventBus;
+        this.permissions = new Permissions();
+        this.networking = new Networking(plugin);
     }
 
     @Override
@@ -65,12 +86,12 @@ public class ModAPIImpl implements ModAPI {
 
     @Override
     public void registerCommand(String commandName, ModCommandExecutor executor) {
-        commandRegistry.register(commandName, executor);
+        commandRegistry.register(commandName, executor, modId);
     }
 
     @Override
     public void registerListener(Listener listener) {
-        eventListenerRegistry.register(listener);
+        eventListenerRegistry.register(listener, modId);
     }
 
     @Override
@@ -79,7 +100,7 @@ public class ModAPIImpl implements ModAPI {
     }
 
     @Override
-    public void registerWorldPopulator(CustomWorldPopulator populator, String[] worldNames, org.bukkit.block.Biome... biomes) {
+    public void registerWorldPopulator(com.example.modloader.api.CustomWorldPopulator populator, String[] worldNames, org.bukkit.block.Biome... biomes) {
         worldGeneratorRegistry.registerPopulator(populator, worldNames, biomes);
     }
 
@@ -151,5 +172,35 @@ public class ModAPIImpl implements ModAPI {
     @Override
     public CustomStructureAPI getCustomStructureAPI() {
         return customStructureAPI;
+    }
+
+    @Override
+    public CustomAssetAPI getCustomAssetAPI() {
+        return customAssetAPI;
+    }
+
+    @Override
+    public org.bukkit.configuration.file.YamlConfiguration getModConfig(String modId) {
+        return modConfigManager.getModConfig(modId);
+    }
+
+    @Override
+    public ModMessageAPI getModMessageAPI() {
+        return modMessageAPI;
+    }
+
+    @Override
+    public EventBus getEventBus() {
+        return eventBus;
+    }
+
+    @Override
+    public Permissions getPermissions() {
+        return permissions;
+    }
+
+    @Override
+    public Networking getNetworking() {
+        return networking;
     }
 }

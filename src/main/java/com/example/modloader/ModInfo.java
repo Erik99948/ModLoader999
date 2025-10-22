@@ -15,8 +15,10 @@ public class ModInfo {
     private final File modFile;
     private URLClassLoader classLoader;
     private ModInitializer initializer;
+    private ModState state;
 
     public ModInfo(String name, String version, String author, String mainClass, Map<String, String> dependencies, File modFile) {
+        this.state = ModState.UNLOADED;
         this.name = name;
         this.version = version;
         this.author = author;
@@ -63,5 +65,13 @@ public class ModInfo {
 
     public void setInitializer(ModInitializer initializer) {
         this.initializer = initializer;
+    }
+
+    public ModState getState() {
+        return state;
+    }
+
+    public void setState(ModState state) {
+        this.state = state;
     }
 }

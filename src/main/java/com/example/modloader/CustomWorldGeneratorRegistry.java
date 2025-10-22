@@ -23,19 +23,16 @@ public class CustomWorldGeneratorRegistry {
     private final Plugin plugin;
     private final Logger logger;
 
-    // Global generators
     private final List<CustomWorldPopulator> globalPopulators = new ArrayList<>();
     private final List<CustomOreGenerator> globalOreGenerators = new ArrayList<>();
     private final List<CustomTreeGenerator> globalTreeGenerators = new ArrayList<>();
     private final List<CustomStructureGenerator> globalStructureGenerators = new ArrayList<>();
 
-    // World-specific generators
     private final Map<String, List<CustomWorldPopulator>> worldSpecificPopulators = new HashMap<>();
     private final Map<String, List<CustomOreGenerator>> worldSpecificOreGenerators = new HashMap<>();
     private final Map<String, List<CustomTreeGenerator>> worldSpecificTreeGenerators = new HashMap<>();
     private final Map<String, List<CustomStructureGenerator>> worldSpecificStructureGenerators = new HashMap<>();
 
-    // Biome-specific generators
     private final Map<Biome, List<CustomWorldPopulator>> biomeSpecificPopulators = new HashMap<>();
     private final Map<Biome, List<CustomOreGenerator>> biomeSpecificOreGenerators = new HashMap<>();
     private final Map<Biome, List<CustomTreeGenerator>> biomeSpecificTreeGenerators = new HashMap<>();
@@ -117,58 +114,46 @@ public class CustomWorldGeneratorRegistry {
     public void applyPopulatorsToWorld(World world) {
         String worldName = world.getName();
 
-        // Apply global populators
         for (CustomWorldPopulator customPopulator : globalPopulators) {
             world.getPopulators().add(new CustomWorldPopulatorBlockPopulator(customPopulator));
             logger.info("Applied global populator " + customPopulator.getClass().getName() + " to world " + worldName);
         }
-        // Apply world-specific populators
         if (worldSpecificPopulators.containsKey(worldName)) {
             for (CustomWorldPopulator customPopulator : worldSpecificPopulators.get(worldName)) {
                 world.getPopulators().add(new CustomWorldPopulatorBlockPopulator(customPopulator));
                 logger.info("Applied world-specific populator " + customPopulator.getClass().getName() + " to world " + worldName);
             }
         }
-        // Apply biome-specific populators
         world.getPopulators().add(new BiomeSpecificWorldPopulatorBlockPopulator(biomeSpecificPopulators));
 
-        // Apply global ore generators
         for (CustomOreGenerator generator : globalOreGenerators) {
             world.getPopulators().add(new CustomOreGeneratorBlockPopulator(generator));
         }
-        // Apply world-specific ore generators
         if (worldSpecificOreGenerators.containsKey(worldName)) {
             for (CustomOreGenerator generator : worldSpecificOreGenerators.get(worldName)) {
                 world.getPopulators().add(new CustomOreGeneratorBlockPopulator(generator));
             }
         }
-        // Apply biome-specific ore generators
         world.getPopulators().add(new BiomeSpecificOreGeneratorBlockPopulator(biomeSpecificOreGenerators));
 
-        // Apply global tree generators
         for (CustomTreeGenerator generator : globalTreeGenerators) {
             world.getPopulators().add(new CustomTreeGeneratorBlockPopulator(generator));
         }
-        // Apply world-specific tree generators
         if (worldSpecificTreeGenerators.containsKey(worldName)) {
             for (CustomTreeGenerator generator : worldSpecificTreeGenerators.get(worldName)) {
                 world.getPopulators().add(new CustomTreeGeneratorBlockPopulator(generator));
             }
         }
-        // Apply biome-specific tree generators
         world.getPopulators().add(new BiomeSpecificTreeGeneratorBlockPopulator(biomeSpecificTreeGenerators));
 
-        // Apply global structure generators
         for (CustomStructureGenerator generator : globalStructureGenerators) {
             world.getPopulators().add(new CustomStructureGeneratorBlockPopulator(generator));
         }
-        // Apply world-specific structure generators
         if (worldSpecificStructureGenerators.containsKey(worldName)) {
             for (CustomStructureGenerator generator : worldSpecificStructureGenerators.get(worldName)) {
                 world.getPopulators().add(new CustomStructureGeneratorBlockPopulator(generator));
             }
         }
-        // Apply biome-specific structure generators
         world.getPopulators().add(new BiomeSpecificStructureGeneratorBlockPopulator(biomeSpecificStructureGenerators));
     }
 
@@ -188,7 +173,6 @@ public class CustomWorldGeneratorRegistry {
         logger.info("Unregistered all custom world populator, ore, tree, and structure generator definitions.");
     }
 
-    // Named inner classes for BlockPopulator implementations
     private static class CustomWorldPopulatorBlockPopulator extends BlockPopulator {
         private final CustomWorldPopulator customPopulator;
 
@@ -211,7 +195,7 @@ public class CustomWorldGeneratorRegistry {
 
         @Override
         public void populate(World world, Random random, org.bukkit.Chunk chunk) {
- Biome chunkBiome = world.getBiome(chunk.getX() * 16 + 7, 7, chunk.getZ() * 16 + 7); // Get biome at center of chunk
+ Biome chunkBiome = world.getBiome(chunk.getX() * 16 + 7, 7, chunk.getZ() * 16 + 7);
             if (biomeSpecificPopulators.containsKey(chunkBiome)) {
                 for (CustomWorldPopulator customPopulator : biomeSpecificPopulators.get(chunkBiome)) {
                     customPopulator.populate(world, random, chunk);
@@ -242,7 +226,7 @@ public class CustomWorldGeneratorRegistry {
 
         @Override
         public void populate(World world, Random random, org.bukkit.Chunk chunk) {
- Biome chunkBiome = world.getBiome(chunk.getX() * 16 + 7, 7, chunk.getZ() * 16 + 7); // Get biome at center of chunk
+ Biome chunkBiome = world.getBiome(chunk.getX() * 16 + 7, 7, chunk.getZ() * 16 + 7);
             if (biomeSpecificOreGenerators.containsKey(chunkBiome)) {
                 for (CustomOreGenerator generator : biomeSpecificOreGenerators.get(chunkBiome)) {
                     generator.generate(world, random, chunk.getX(), chunk.getZ());
@@ -276,7 +260,7 @@ public class CustomWorldGeneratorRegistry {
 
         @Override
         public void populate(World world, Random random, org.bukkit.Chunk chunk) {
- Biome chunkBiome = world.getBiome(chunk.getX() * 16 + 7, 7, chunk.getZ() * 16 + 7); // Get biome at center of chunk
+ Biome chunkBiome = world.getBiome(chunk.getX() * 16 + 7, 7, chunk.getZ() * 16 + 7);
             if (biomeSpecificTreeGenerators.containsKey(chunkBiome)) {
                 for (CustomTreeGenerator generator : biomeSpecificTreeGenerators.get(chunkBiome)) {
                     int x = chunk.getX() * 16 + random.nextInt(16);
@@ -310,7 +294,7 @@ public class CustomWorldGeneratorRegistry {
 
         @Override
         public void populate(World world, Random random, org.bukkit.Chunk chunk) {
- Biome chunkBiome = world.getBiome(chunk.getX() * 16 + 7, 7, chunk.getZ() * 16 + 7); // Get biome at center of chunk
+ Biome chunkBiome = world.getBiome(chunk.getX() * 16 + 7, 7, chunk.getZ() * 16 + 7);
             if (biomeSpecificStructureGenerators.containsKey(chunkBiome)) {
                 for (CustomStructureGenerator generator : biomeSpecificStructureGenerators.get(chunkBiome)) {
                     generator.generate(world, random, chunk.getX(), chunk.getZ());

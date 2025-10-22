@@ -19,10 +19,12 @@ public class ResourcePackGenerator {
     private final JavaPlugin plugin;
     private final File stagingDir;
     private final File zipFile;
+    private final AssetManager assetManager;
     private String zipFileSha1;
 
-    public ResourcePackGenerator(JavaPlugin plugin) {
+    public ResourcePackGenerator(JavaPlugin plugin, AssetManager assetManager) {
         this.plugin = plugin;
+        this.assetManager = assetManager;
         this.stagingDir = new File(plugin.getDataFolder(), "resource-pack-staging");
         this.zipFile = new File(plugin.getDataFolder(), "generated-pack.zip");
     }
@@ -51,13 +53,23 @@ public class ResourcePackGenerator {
     private void addCustomAssets() throws IOException {
         plugin.getLogger().info("Adding custom assets to resource pack staging directory.");
 
-        File sourceAssetsDir = new File(plugin.getDataFolder().getParentFile().getParentFile(), "src/main/resources/assets/modloader");
-        File targetAssetsDir = new File(stagingDir, "assets/modloader");
 
-        if (sourceAssetsDir.exists() && sourceAssetsDir.isDirectory()) {
-            copyFolder(sourceAssetsDir, targetAssetsDir);
-        } else {
-            plugin.getLogger().warning("Source assets directory not found: " + sourceAssetsDir.getAbsolutePath());
+        for (File assetFile : assetManager.getAllStagedAssets().values()) {
+            File relativePath = new File(stagingDir.toURI().relativize(assetFile.toURI()).getPath());
+            File targetFile = new File(stagingDir, relativePath.getPath());
+            targetFile.getParentFile().mkdirs();
+            try (FileInputStream in = new FileInputStream(assetFile);
+                 FileOutputStream out = new FileOutputStream(targetFile)) {
+                byte[] buffer = new byte[4096];
+                int length;
+                while ((length = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, length);
+                }
+                plugin.getLogger().info("Copied staged asset: " + assetFile.getName());
+            } catch (IOException e) {
+                plugin.getLogger().severe("Failed to copy staged asset " + assetFile.getName() + ": " + e.getMessage());
+                e.printStackTrace();
+            }
         }
     }
 
@@ -181,7 +193,6 @@ public class ResourcePackGenerator {
             while ((line = reader.readLine()) != null) {
                 jsonContent.append(line);
             }
-            // Attempt to parse the JSON content
             new org.json.JSONObject(jsonContent.toString());
             plugin.getLogger().info("Validated JSON file: " + jsonFile.getName());
             return true;
