@@ -390,8 +390,6 @@ public class ModLoaderService {
         }
     }
 
-
-
     public List<ModInfo> getLoadedModsInfo() {
         return Collections.unmodifiableList(loadOrder);
     }
