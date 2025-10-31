@@ -1,0 +1,21 @@
+grant {
+    // Deny all permissions by default
+    permission java.security.AllPermission;
+};
+
+grant codeBase "file:${java.home}/lib/ext/*" {
+    permission java.security.AllPermission;
+};
+
+grant codeBase "file:${user.dir}/*" {
+    // Grant some basic permissions
+    permission java.util.PropertyPermission "*", "read";
+    permission java.lang.RuntimePermission "getClassLoader";
+
+    // Allow read access to the mod's own jar file
+    permission java.io.FilePermission "${user.dir}/plugins/ModLoader999/Mods/-", "read";
+
+    // Allow read/write access to the mod's own config directory
+    permission java.io.FilePermission "${user.dir}/plugins/ModLoader999/configs/${mod.name}/*", "read,write,delete";
+};
+

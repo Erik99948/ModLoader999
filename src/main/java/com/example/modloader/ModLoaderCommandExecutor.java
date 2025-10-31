@@ -18,10 +18,12 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
 
     private final JavaPlugin plugin;
     private final ModLoaderService modLoaderService;
+    private final ModRepository modRepository;
 
     public ModLoaderCommandExecutor(JavaPlugin plugin, ModLoaderService modLoaderService) {
         this.plugin = plugin;
         this.modLoaderService = modLoaderService;
+        this.modRepository = modLoaderService.getModRepository();
     }
 
     @Override
@@ -102,6 +104,15 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
             case "load":
                 handleLoadCommand(sender, args);
                 break;
+            case "hotreload":
+                handleHotReloadCommand(sender, args);
+                break;
+            case "browse":
+                handleBrowseCommand(sender);
+                break;
+            case "gui":
+                handleGUICommand(sender);
+                break;
             case "help":
                 sendHelpMessage(sender);
                 break;
@@ -122,7 +133,22 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.YELLOW + "/modloader disable <modName>" + ChatColor.GRAY + " - Disable an enabled mod.");
         sender.sendMessage(ChatColor.YELLOW + "/modloader unload <modName>" + ChatColor.GRAY + " - Unload a mod temporarily.");
         sender.sendMessage(ChatColor.YELLOW + "/modloader load <modName>" + ChatColor.GRAY + " - Load a previously unloaded mod.");
+        sender.sendMessage(ChatColor.YELLOW + "/modloader hotreload <modName>" + ChatColor.GRAY + " - Hot-reload a single mod.");
+        sender.sendMessage(ChatColor.YELLOW + "/modloader gui" + ChatColor.GRAY + " - Open the in-game mod management GUI.");
         sender.sendMessage(ChatColor.YELLOW + "/modloader help" + ChatColor.GRAY + " - Show this help.");
+    }
+
+    private void handleGUICommand(CommandSender sender) {
+        if (!(sender instanceof org.bukkit.entity.Player)) {
+            sender.sendMessage(ChatColor.RED + "This command can only be used by a player.");
+            return;
+        }
+        if (!sender.hasPermission("modloader.gui")) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            return;
+        }
+        org.bukkit.entity.Player player = (org.bukkit.entity.Player) sender;
+        modLoaderService.createModManagementGUI().open(player);
     }
 
     private void handleListCommand(CommandSender sender) {
@@ -224,7 +250,7 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            return Arrays.asList("list", "info", "reload", "enable", "disable", "unload", "load", "help").stream()
+            return Arrays.asList("list", "info", "reload", "enable", "disable", "unload", "load", "hotreload", "publishmod", "browse", "gui", "help").stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
         } else if (args.length == 2) {
@@ -234,12 +260,73 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
                         .filter(modName -> !modLoaderService.isModEnabled(modName))
                         .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList());
-            } else if (subCommand.equals("disable") || subCommand.equals("unload") || subCommand.equals("info")) {
+            } else if (subCommand.equals("disable") || subCommand.equals("unload") || subCommand.equals("info") || subCommand.equals("hotreload")) {
                 return modLoaderService.getEnabledModNames().stream()
                         .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
                         .collect(Collectors.toList());
             }
         }
         return Collections.emptyList();
+    }
+
+    private void handlePublishModCommand(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("modloader.publish")) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            return;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "Usage: /modloader publishmod <modName>");
+            return;
+        }
+        String modName = args[1];
+        ModInfo modInfo = modLoaderService.getModInfo(modName);
+        if (modInfo == null) {
+            sender.sendMessage(ChatColor.RED + "Mod '" + modName + "' not found.");
+            return;
+        }
+
+        if (modRepository.isModInRepository(modName)) {
+            sender.sendMessage(ChatColor.YELLOW + "Mod '" + modName + "' is already in the repository.");
+            return;
+        }
+
+        modRepository.addMod(modInfo);
+        sender.sendMessage(ChatColor.GREEN + "Mod '" + modName + "' has been published to the repository!");
+    }
+
+    private void handleBrowseCommand(CommandSender sender) {
+        List<ModInfo> repoMods = modRepository.getAllMods();
+        if (repoMods.isEmpty()) {
+            sender.sendMessage(ChatColor.YELLOW + "The mod repository is empty.");
+            return;
+        }
+
+        sender.sendMessage(ChatColor.GOLD + "--- Mod Repository ---");
+        for (ModInfo mod : repoMods) {
+            sender.sendMessage(ChatColor.AQUA + mod.getName() + ChatColor.GRAY + " v" + mod.getVersion() + " by " + mod.getAuthor());
+        }
+    }
+
+    private void handleHotReloadCommand(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("modloader.hotreload")) {
+            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            return;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "Usage: /modloader hotreload <modName>");
+            return;
+        }
+        String modToHotReload = args[1];
+        sender.sendMessage(ChatColor.YELLOW + "Attempting to hot-reload mod: " + modToHotReload + "...");
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                modLoaderService.hotReloadMod(modToHotReload);
+                sender.sendMessage(ChatColor.GREEN + "Mod '" + modToHotReload + "' hot-reloaded successfully!");
+            } catch (Exception e) {
+                sender.sendMessage(ChatColor.RED + "Failed to hot-reload mod '" + modToHotReload + "': " + e.getMessage());
+                plugin.getLogger().severe("Error hot-reloading mod '" + modToHotReload + "': " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
     }
 }

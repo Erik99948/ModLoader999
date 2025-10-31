@@ -22,6 +22,8 @@ public final class ModLoader extends JavaPlugin {
             }
         }
 
+        saveResource("mod.policy", false);
+
         this.modLoaderService = new ModLoaderService(this);
 
         this.modLoaderService.loadModsAndGeneratePack();
@@ -34,7 +36,7 @@ public final class ModLoader extends JavaPlugin {
         saveDefaultConfig();
         int webServerPort = getConfig().getInt("web-server-port", 25566);
 
-        this.webServer = new WebServer(this, this.modLoaderService.getResourcePackGenerator().getZipFile(), webServerPort);
+        this.webServer = new WebServer(this, this.modLoaderService, this.modLoaderService.getResourcePackGenerator().getZipFile(), webServerPort);
         this.webServer.start();
 
 

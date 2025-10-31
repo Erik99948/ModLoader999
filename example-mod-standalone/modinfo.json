@@ -1,0 +1,11 @@
+{
+  "id": "examplemod",
+  "name": "Example Mod",
+  "version": "1.0.0",
+  "author": "Gemini",
+  "description": "A simple example mod for ModLoader999.",
+  "main": "com.example.examplemod.ExampleMod",
+  "apiVersion": "1.0.0",
+  "dependencies": {},
+  "softDependencies": []
+}

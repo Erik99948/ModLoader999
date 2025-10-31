@@ -1,10 +1,13 @@
 com.example.modloader
 com.example.modloader.api
 com.example.modloader.api.block
+com.example.modloader.api.config
 com.example.modloader.api.dependencyinjection
 com.example.modloader.api.event
+com.example.modloader.api.gui
 com.example.modloader.api.mob
 com.example.modloader.api.network
 com.example.modloader.api.permissions
 com.example.modloader.api.world
+com.example.modloader.gui
 com.example.modloader.mob

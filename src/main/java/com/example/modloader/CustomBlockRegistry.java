@@ -3,6 +3,8 @@ package com.example.modloader;
 import com.example.modloader.api.block.BlockBreakBehavior;
 import com.example.modloader.api.block.BlockInteractBehavior;
 import com.example.modloader.api.block.BlockPlaceBehavior;
+import com.example.modloader.api.event.PreRegisterBlockEvent;
+
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
@@ -31,16 +33,25 @@ public class CustomBlockRegistry implements Listener {
     private final Logger logger;
     private final Map<String, CustomBlock> registeredCustomBlocks = new HashMap<>();
     private final NamespacedKey customBlockIdKey;
+    private final com.example.modloader.api.event.EventBus eventBus;
 
-    public CustomBlockRegistry(Plugin plugin) {
+    public CustomBlockRegistry(Plugin plugin, com.example.modloader.api.event.EventBus eventBus) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.customBlockIdKey = new NamespacedKey(plugin, "custom_block_id");
+        this.eventBus = eventBus;
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     public void register(CustomBlock customBlock) {
+        PreRegisterBlockEvent event = new PreRegisterBlockEvent(customBlock);
+        eventBus.post(event);
+        if (event.isCancelled()) {
+            logger.warning("Custom block registration for '" + customBlock.getId() + "' was cancelled by another mod. Skipping.");
+            return;
+        }
+
         if (registeredCustomBlocks.containsKey(customBlock.getId())) {
             logger.warning("Custom block with ID '" + customBlock.getId() + "' already registered. Skipping.");
             return;

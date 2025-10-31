@@ -30,7 +30,7 @@ public class PlayerJoinListener implements Listener {
         }
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            player.setResourcePack(url, sha1);
+        player.setResourcePack(webServer.getResourcePackUrl());
             plugin.getLogger().info("Sent resource pack request to " + player.getName());
         }, 40L);
     }

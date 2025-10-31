@@ -9,4 +9,8 @@ public interface ModMessageAPI {
     void registerMessageHandler(String messageType, ModMessageHandler handler);
 
     void unregisterMessageHandler(String messageType, ModMessageHandler handler);
+
+    void sendInterServerMessage(String targetServer, String recipientModId, String messageType, String payload);
+
+    void broadcastInterServerMessage(String messageType, String payload);
 }

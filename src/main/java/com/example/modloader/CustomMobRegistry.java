@@ -1,6 +1,7 @@
 package com.example.modloader;
 
 import com.example.modloader.mob.CustomMobGoalExecutor;
+import com.example.modloader.api.event.PreRegisterMobEvent;
 import com.example.modloader.api.mob.CustomMobSpawner;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -38,11 +39,13 @@ public class CustomMobRegistry implements Listener {
     private final Map<LivingEntity, CustomMobGoalExecutor> goalExecutors = new HashMap<>();
     private final List<CustomMobSpawner> registeredSpawners = new ArrayList<>();
     private final NamespacedKey customMobIdKey;
+    private final com.example.modloader.api.event.EventBus eventBus;
 
-    public CustomMobRegistry(Plugin plugin) {
+    public CustomMobRegistry(Plugin plugin, com.example.modloader.api.event.EventBus eventBus) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.customMobIdKey = new NamespacedKey(plugin, "custom_mob_id");
+        this.eventBus = eventBus;
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
@@ -57,6 +60,13 @@ public class CustomMobRegistry implements Listener {
     }
 
     public void register(CustomMob customMob) {
+        PreRegisterMobEvent event = new PreRegisterMobEvent(customMob);
+        eventBus.post(event);
+        if (event.isCancelled()) {
+            logger.warning("Custom mob registration for '" + customMob.getId() + "' was cancelled by another mod. Skipping.");
+            return;
+        }
+
         if (registeredCustomMobs.containsKey(customMob.getId())) {
             logger.warning("Custom mob with ID '" + customMob.getId() + "' already registered. Skipping.");
             return;

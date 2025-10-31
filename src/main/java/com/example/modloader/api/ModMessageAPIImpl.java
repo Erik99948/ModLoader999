@@ -1,16 +1,15 @@
 package com.example.modloader.api;
 
+import com.example.modloader.api.network.MessagePacket;
+import com.example.modloader.api.network.Networking;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -18,40 +17,68 @@ public class ModMessageAPIImpl implements ModMessageAPI {
 
     private final JavaPlugin plugin;
     private final String senderModId;
+    private final Networking networking;
+    private final String messageChannel = "modloader:messages";
 
     private final Map<String, List<HandlerEntry>> messageHandlers = new ConcurrentHashMap<>();
-    private final Map<String, Queue<Message>> messageQueues = new ConcurrentHashMap<>();
 
-    public ModMessageAPIImpl(JavaPlugin plugin, String senderModId) {
+    public ModMessageAPIImpl(JavaPlugin plugin, String senderModId, Networking networking) {
         this.plugin = plugin;
         this.senderModId = senderModId;
+        this.networking = networking;
+        this.networking.registerChannel(messageChannel);
+        this.networking.registerListener(messageChannel, MessagePacket.class, this::handleNetworkPacket);
     }
 
     @Override
     public void sendMessage(String recipientModId, String messageType, String payload) {
-        Message message = new Message(senderModId, messageType, payload);
-        messageQueues.computeIfAbsent(recipientModId, k -> new ConcurrentLinkedQueue<>()).offer(message);
-        plugin.getLogger().info("Mod " + senderModId + " sent message of type " + messageType + " to " + recipientModId);
+        MessagePacket packet = new MessagePacket(senderModId, recipientModId, messageType, payload);
+        // For now, sending to all online players. In a real scenario, you'd target specific players
+        // or use BungeeCord/Velocity forwarding for inter-server communication.
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            networking.sendPacket(player, messageChannel, packet);
+        }
+        plugin.getLogger().info("Mod " + senderModId + " sent message of type " + messageType + " to " + recipientModId + " via network.");
     }
 
     @Override
     public void broadcastMessage(String messageType, String payload) {
-        Message message = new Message(senderModId, messageType, payload);
-        Set<String> recipientModIds = messageHandlers.getOrDefault(messageType, new ArrayList<>()).stream()
-                .map(entry -> entry.modId)
-                .collect(Collectors.toSet());
+        MessagePacket packet = new MessagePacket(senderModId, null, messageType, payload);
+        for (Player player : plugin.getServer().getOnlinePlayers()) {
+            networking.sendPacket(player, messageChannel, packet);
+        }
+        plugin.getLogger().info("Mod " + senderModId + " broadcasted message of type " + messageType + " via network.");
+    }
 
-        if (recipientModIds.isEmpty()) {
-            plugin.getLogger().info("Mod " + senderModId + " broadcasted message of type " + messageType + ", but no mods registered handlers.");
+    @Override
+    public void sendInterServerMessage(String targetServer, String recipientModId, String messageType, String payload) {
+        Player player = getAnyOnlinePlayer();
+        if (player == null) {
+            plugin.getLogger().warning("Cannot send inter-server message: No players online to forward the message.");
             return;
         }
+        MessagePacket packet = new MessagePacket(senderModId, recipientModId, messageType, payload);
+        networking.sendBungeeCordPacket(player, "Forward", targetServer, packet);
+        plugin.getLogger().info("Mod " + senderModId + " sent inter-server message of type " + messageType + " to " + recipientModId + " on server " + targetServer);
+    }
 
-        for (String recipientModId : recipientModIds) {
-            if (!recipientModId.equals(senderModId)) {
-                messageQueues.computeIfAbsent(recipientModId, k -> new ConcurrentLinkedQueue<>()).offer(message);
-            }
+    @Override
+    public void broadcastInterServerMessage(String messageType, String payload) {
+        Player player = getAnyOnlinePlayer();
+        if (player == null) {
+            plugin.getLogger().warning("Cannot broadcast inter-server message: No players online to forward the message.");
+            return;
         }
-        plugin.getLogger().info("Mod " + senderModId + " broadcasted message of type " + messageType + " to " + recipientModIds.size() + " mods.");
+        MessagePacket packet = new MessagePacket(senderModId, null, messageType, payload);
+        networking.sendBungeeCordPacket(player, "Forward", "ALL", packet);
+        plugin.getLogger().info("Mod " + senderModId + " broadcasted inter-server message of type " + messageType + " to ALL servers.");
+    }
+
+    private Player getAnyOnlinePlayer() {
+        if (plugin.getServer().getOnlinePlayers().isEmpty()) {
+            return null;
+        }
+        return plugin.getServer().getOnlinePlayers().iterator().next();
     }
 
     @Override
@@ -72,27 +99,26 @@ public class ModMessageAPIImpl implements ModMessageAPI {
         }
     }
 
-    public void dispatchMessages(String recipientModId) {
-        Queue<Message> queue = messageQueues.get(recipientModId);
-        if (queue != null) {
-            while (!queue.isEmpty()) {
-                Message message = queue.poll();
-                if (message != null) {
-                    List<HandlerEntry> handlers = messageHandlers.get(message.messageType);
-                    if (handlers != null) {
-                        for (HandlerEntry entry : new ArrayList<>(handlers)) {
-                            if (entry.modId.equals(recipientModId)) {
-                                try {
-                                    entry.handler.handleMessage(message.senderModId, message.messageType, message.payload);
-                                } catch (Exception e) {
-                                    plugin.getLogger().log(Level.SEVERE, "Error handling message for mod " + recipientModId + " from " + message.senderModId + " type " + message.messageType, e);
-                                }
-                            }
-                        }
-                    } else {
-                        plugin.getLogger().warning("Mod " + recipientModId + " received message of type " + message.messageType + " from " + message.senderModId + " but no handler registered.");
+    private void handleNetworkPacket(MessagePacket packet) {
+        // Only process messages intended for this modloader instance or broadcast messages
+        if (packet.getRecipientModId() == null || packet.getRecipientModId().equals(senderModId)) {
+            List<HandlerEntry> handlers = messageHandlers.get(packet.getMessageType());
+            if (handlers != null) {
+                // Filter handlers to only those registered by the current modloader instance
+                // or if the packet is a broadcast (recipientModId is null)
+                List<HandlerEntry> relevantHandlers = handlers.stream()
+                        .filter(entry -> packet.getRecipientModId() == null || entry.modId.equals(packet.getRecipientModId()))
+                        .collect(Collectors.toList());
+
+                for (HandlerEntry entry : relevantHandlers) {
+                    try {
+                        entry.handler.handleMessage(packet.getSenderModId(), packet.getMessageType(), packet.getPayload());
+                    } catch (Exception e) {
+                        plugin.getLogger().log(Level.SEVERE, "Error handling network message for mod " + entry.modId + " from " + packet.getSenderModId() + " type " + packet.getMessageType(), e);
                     }
                 }
+            } else {
+                plugin.getLogger().warning("Received network message of type " + packet.getMessageType() + " from " + packet.getSenderModId() + " but no handler registered.");
             }
         }
     }
@@ -104,20 +130,7 @@ public class ModMessageAPIImpl implements ModMessageAPI {
                 messageHandlers.remove(messageType);
             }
         });
-        messageQueues.remove(modId);
-        plugin.getLogger().info("Unregistered all message handlers and cleared message queue for mod: " + modId);
-    }
-
-    private static class Message {
-        final String senderModId;
-        final String messageType;
-        final String payload;
-
-        Message(String senderModId, String messageType, String payload) {
-            this.senderModId = senderModId;
-            this.messageType = messageType;
-            this.payload = payload;
-        }
+        plugin.getLogger().info("Unregistered all message handlers for mod: " + modId);
     }
 
     private static class HandlerEntry {

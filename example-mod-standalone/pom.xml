@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>example-mod</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Example Mod</name>
+    <description>An example mod for ModLoader999.</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <modloader.version>3.0.0</modloader.version> <!-- Version of the ModLoader999 -->
+    </properties>
+
+    <repositories>
+        <!-- Repository for ModLoader999 if it's not in a public repo -->
+        <!-- For now, assuming it's built locally and available in local Maven repo -->
+    </repositories>
+
+    <dependencies>
+        <!-- Dependency on ModLoader999 API -->
+        <dependency>
+            <groupId>io.github.erik99948</groupId>
+            <artifactId>modloader</artifactId>
+            <version>${modloader.version}</version>
+            <scope>provided</scope> <!-- ModLoader API is provided by the server -->
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.build.directory}/${project.artifactId}-${project.version}.modloader999</outputFile>
+                            <artifactSet>
+                                <includes>
+                                    <!-- Include only example-mod's classes and resources -->
+                                    <include>com.example:example-mod</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <!-- Exclude ModLoader999 classes from the shaded JAR -->
+                                        <exclude>io.github.erik99948:modloader</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>.</directory>
+                <includes>
+                    <include>modinfo.json</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+</project>

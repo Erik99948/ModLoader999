@@ -21,12 +21,20 @@ public class ResourcePackGenerator {
     private final File zipFile;
     private final AssetManager assetManager;
     private String zipFileSha1;
+    private int packFormat;
+    private String packDescription;
 
     public ResourcePackGenerator(JavaPlugin plugin, AssetManager assetManager) {
+        this(plugin, assetManager, 34, "Dynamically generated server resources.");
+    }
+
+    public ResourcePackGenerator(JavaPlugin plugin, AssetManager assetManager, int packFormat, String packDescription) {
         this.plugin = plugin;
         this.assetManager = assetManager;
         this.stagingDir = new File(plugin.getDataFolder(), "resource-pack-staging");
         this.zipFile = new File(plugin.getDataFolder(), "generated-pack.zip");
+        this.packFormat = packFormat;
+        this.packDescription = packDescription;
     }
 
     public boolean generate() {
@@ -51,9 +59,6 @@ public class ResourcePackGenerator {
     }
 
     private void addCustomAssets() throws IOException {
-        plugin.getLogger().info("Adding custom assets to resource pack staging directory.");
-
-
         for (File assetFile : assetManager.getAllStagedAssets().values()) {
             File relativePath = new File(stagingDir.toURI().relativize(assetFile.toURI()).getPath());
             File targetFile = new File(stagingDir, relativePath.getPath());
@@ -118,8 +123,8 @@ public class ResourcePackGenerator {
         try (FileWriter writer = new FileWriter(packMetaFile)) {
             writer.write("{\n");
             writer.write("  \"pack\": {\n");
-            writer.write("    \"pack_format\": 34,\n");
-            writer.write("    \"description\": \"Dynamically generated server resources.\"\n");
+            writer.write("    \"pack_format\": " + packFormat + ",\n");
+            writer.write("    \"description\": \"" + packDescription + "\"\n");
             writer.write("  }\n");
             writer.write("}\n");
         }

@@ -27,9 +27,24 @@ public class AssetManager {
     }
 
     public void registerAsset(String modId, String assetId, String filePathInJar, String assetTypeFolder, URLClassLoader modClassLoader) {
+        registerAsset(modId, assetId, filePathInJar, assetTypeFolder, modClassLoader, 0);
+    }
+
+    public void registerAsset(String modId, String assetId, String filePathInJar, String assetTypeFolder, URLClassLoader modClassLoader, int priority) {
         if (stagedAssets.containsKey(assetId)) {
-            plugin.getLogger().warning("Mod " + modId + ": Asset with ID '" + assetId + "' already registered. Skipping.");
-            return;
+            StagedAssetInfo existingAsset = stagedAssets.get(assetId);
+            if (priority < existingAsset.priority) {
+                plugin.getLogger().info("Mod " + modId + ": Asset with ID '" + assetId + "' already registered by mod " + existingAsset.modId + " with higher priority. Skipping.");
+                return;
+            } else if (priority == existingAsset.priority) {
+                plugin.getLogger().warning("Mod " + modId + ": Asset with ID '" + assetId + "' already registered by mod " + existingAsset.modId + " with same priority. Skipping new asset.");
+                return;
+            } else {
+                plugin.getLogger().info("Mod " + modId + ": Asset with ID '" + assetId + "' overriding existing asset from mod " + existingAsset.modId + ".");
+                if (existingAsset.stagedFile.exists()) {
+                    existingAsset.stagedFile.delete();
+                }
+            }
         }
 
         File modAssetDir = new File(resourcePackStagingDir, "assets" + File.separator + modId);
@@ -52,8 +67,8 @@ public class AssetManager {
                     fos.write(buffer, 0, bytesRead);
                 }
             }
-            stagedAssets.put(assetId, new StagedAssetInfo(modId, assetId, targetFile));
-            plugin.getLogger().info("Mod " + modId + ": Registered asset '" + assetId + "' from '" + filePathInJar + "'. Staged to: " + targetFile.getAbsolutePath());
+            stagedAssets.put(assetId, new StagedAssetInfo(modId, assetId, targetFile, priority));
+            plugin.getLogger().info("Mod " + modId + ": Registered asset '" + assetId + "' from '" + filePathInJar + "'. Staged to: " + targetFile.getAbsolutePath() + " with priority " + priority + ".");
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Mod " + modId + ": Failed to stage asset '" + assetId + "' from '" + filePathInJar + "'.", e);
         }
@@ -63,6 +78,10 @@ public class AssetManager {
         Map<String, File> assets = new HashMap<>();
         stagedAssets.forEach((assetId, info) -> assets.put(assetId, info.stagedFile));
         return assets;
+    }
+
+    public File getResourcePackStagingDir() {
+        return resourcePackStagingDir;
     }
 
     public void unregisterAllAssetsForMod(String modIdToUnregister) {
@@ -89,11 +108,13 @@ public class AssetManager {
         final String modId;
         final String assetId;
         final File stagedFile;
+        final int priority;
 
-        StagedAssetInfo(String modId, String assetId, File stagedFile) {
+        StagedAssetInfo(String modId, String assetId, File stagedFile, int priority) {
             this.modId = modId;
             this.assetId = assetId;
             this.stagedFile = stagedFile;
+            this.priority = priority;
         }
     }
 }

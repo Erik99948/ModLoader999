@@ -1,24 +1,37 @@
 package com.example.modloader;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 public class WebServer {
 
     private final JavaPlugin plugin;
+    private final ModLoaderService modLoaderService;
     private final File resourcePackFile;
     private final int port;
     private HttpServer server;
     private String resourcePackUrl;
+    private String dashboardUrl;
+    private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    public WebServer(JavaPlugin plugin, File resourcePackFile, int port) {
+    public WebServer(JavaPlugin plugin, ModLoaderService modLoaderService, File resourcePackFile, int port) {
         this.plugin = plugin;
+        this.modLoaderService = modLoaderService;
         this.resourcePackFile = resourcePackFile;
         this.port = port;
     }
@@ -26,13 +39,145 @@ public class WebServer {
     public void start() {
         try {
             server = HttpServer.create(new InetSocketAddress(port), 0);
+            server.setExecutor(Executors.newFixedThreadPool(4));
+
+            // Serve static dashboard files
+            server.createContext("/", this::handleStaticFileRequest);
+
+            // API to list all mods
+            server.createContext("/api/mods", httpExchange -> {
+                if ("GET".equals(httpExchange.getRequestMethod())) {
+                    List<ModInfo> mods = modLoaderService.getLoadedModsInfo();
+                    sendJsonResponse(httpExchange, 200, gson.toJson(mods));
+                } else {
+                    sendErrorResponse(httpExchange, 405, "Method Not Allowed");
+                }
+            });
+
+            // API to get info about a single mod
+            server.createContext("/api/mod/", httpExchange -> {
+                String path = httpExchange.getRequestURI().getPath();
+                String[] pathParts = path.split("/");
+                if (pathParts.length >= 4 && "mod".equals(pathParts[2])) {
+                    String modId = pathParts[3];
+                    ModInfo modInfo = modLoaderService.getModInfo(modId);
+                    if (modInfo != null) {
+                        sendJsonResponse(httpExchange, 200, gson.toJson(modInfo));
+                    } else {
+                        sendErrorResponse(httpExchange, 404, "Mod Not Found");
+                    }
+                } else {
+                    sendErrorResponse(httpExchange, 400, "Bad Request");
+                }
+            });
+
+            // API to enable a mod
+            server.createContext("/api/mod/enable/", httpExchange -> {
+                if ("POST".equals(httpExchange.getRequestMethod())) {
+                    String path = httpExchange.getRequestURI().getPath();
+                    String[] pathParts = path.split("/");
+                    if (pathParts.length >= 5 && "enable".equals(pathParts[3])) {
+                        String modId = pathParts[4];
+                        try {
+                            modLoaderService.enableMod(modId);
+                            sendJsonResponse(httpExchange, 200, "{\"status\":\"success\", \"message\":\"Mod " + modId + " enabled.\"}");
+                        } catch (Exception e) {
+                            plugin.getLogger().log(Level.SEVERE, "Failed to enable mod " + modId, e);
+                            sendErrorResponse(httpExchange, 500, "Failed to enable mod: " + e.getMessage());
+                        }
+                    } else {
+                        sendErrorResponse(httpExchange, 400, "Bad Request");
+                    }
+                } else {
+                    sendErrorResponse(httpExchange, 405, "Method Not Allowed");
+                }
+            });
+
+            // API to disable a mod
+            server.createContext("/api/mod/disable/", httpExchange -> {
+                if ("POST".equals(httpExchange.getRequestMethod())) {
+                    String path = httpExchange.getRequestURI().getPath();
+                    String[] pathParts = path.split("/");
+                    if (pathParts.length >= 5 && "disable".equals(pathParts[3])) {
+                        String modId = pathParts[4];
+                        try {
+                            modLoaderService.disableMod(modId);
+                            sendJsonResponse(httpExchange, 200, "{\"status\":\"success\", \"message\":\"Mod " + modId + " disabled.\"}");
+                        } catch (Exception e) {
+                            plugin.getLogger().log(Level.SEVERE, "Failed to disable mod " + modId, e);
+                            sendErrorResponse(httpExchange, 500, "Failed to disable mod: " + e.getMessage());
+                        }
+                    } else {
+                        sendErrorResponse(httpExchange, 400, "Bad Request");
+                    }
+                } else {
+                    sendErrorResponse(httpExchange, 405, "Method Not Allowed");
+                }
+            });
+
+            // API to hot-reload a mod
+            server.createContext("/api/mod/hotreload/", httpExchange -> {
+                if ("POST".equals(httpExchange.getRequestMethod())) {
+                    String path = httpExchange.getRequestURI().getPath();
+                    String[] pathParts = path.split("/");
+                    if (pathParts.length >= 5 && "hotreload".equals(pathParts[3])) {
+                        String modId = pathParts[4];
+                        try {
+                            modLoaderService.hotReloadMod(modId);
+                            sendJsonResponse(httpExchange, 200, "{\"status\":\"success\", \"message\":\"Mod " + modId + " hot-reloaded.\"}");
+                        } catch (Exception e) {
+                            plugin.getLogger().log(Level.SEVERE, "Failed to hot-reload mod " + modId, e);
+                            sendErrorResponse(httpExchange, 500, "Failed to hot-reload mod: " + e.getMessage());
+                        }
+                    } else {
+                        sendErrorResponse(httpExchange, 400, "Bad Request");
+                    }
+                } else {
+                    sendErrorResponse(httpExchange, 405, "Method Not Allowed");
+                }
+            });
+
+            // API to get/set mod config
+            server.createContext("/api/mod/config/", httpExchange -> {
+                String path = httpExchange.getRequestURI().getPath();
+                String[] pathParts = path.split("/");
+                if (pathParts.length >= 5 && "config".equals(pathParts[3])) {
+                    String modId = pathParts[4];
+                    ModInfo modInfo = modLoaderService.getModInfo(modId);
+                    if (modInfo == null) {
+                        sendErrorResponse(httpExchange, 404, "Mod Not Found");
+                        return;
+                    }
+
+                    if ("GET".equals(httpExchange.getRequestMethod())) {
+ String configContent = modLoaderService.getModConfigManager().getModConfigYamlContent(modId);
+                        if (configContent != null) {
+                            httpExchange.getResponseHeaders().set("Content-Type", "text/plain");
+                            sendResponse(httpExchange, 200, configContent);
+                        } else {
+                            sendErrorResponse(httpExchange, 404, "Config Not Found");
+                        }
+                    } else if ("POST".equals(httpExchange.getRequestMethod())) {
+                        try (InputStream is = httpExchange.getRequestBody()) {
+                            String requestBody = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                            modLoaderService.getModConfigManager().setModConfigYamlContent(modId, requestBody);
+                            sendJsonResponse(httpExchange, 200, "{\"status\":\"success\", \"message\":\"Mod " + modId + " config updated.\"}");
+                        } catch (Exception e) {
+                            plugin.getLogger().log(Level.SEVERE, "Failed to update config for mod " + modId, e);
+                            sendErrorResponse(httpExchange, 500, "Failed to update config: " + e.getMessage());
+                        }
+                    } else {
+                        sendErrorResponse(httpExchange, 405, "Method Not Allowed");
+                    }
+                } else {
+                    sendErrorResponse(httpExchange, 400, "Bad Request");
+                }
+            });
+
+            // Serve resource pack
             server.createContext("/pack.zip", httpExchange -> {
                 if (!resourcePackFile.exists()) {
-                    String response = "404 (Not Found)\n";
-                    httpExchange.sendResponseHeaders(404, response.length());
-                    try (OutputStream os = httpExchange.getResponseBody()) {
-                        os.write(response.getBytes());
-                    }
+                    sendErrorResponse(httpExchange, 404, "Resource Pack Not Found");
                     return;
                 }
 
@@ -42,7 +187,6 @@ public class WebServer {
                 }
             });
 
-            server.setExecutor(null);
             server.start();
 
             String address = plugin.getServer().getIp();
@@ -50,14 +194,61 @@ public class WebServer {
                 address = "127.0.0.1";
             }
             this.resourcePackUrl = "http://" + address + ":" + port + "/pack.zip";
+            this.dashboardUrl = "http://" + address + ":" + port + "/";
 
             plugin.getLogger().info("Web server started on port " + port);
             plugin.getLogger().info("Resource pack is available at: " + this.resourcePackUrl);
+            plugin.getLogger().info("Web dashboard is available at: " + this.dashboardUrl);
 
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to start web server on port " + port);
             e.printStackTrace();
         }
+    }
+
+    private void handleStaticFileRequest(HttpExchange httpExchange) throws IOException {
+        String path = httpExchange.getRequestURI().getPath();
+        if (path.equals("/")) {
+            path = "/index.html";
+        }
+
+        if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        String resourcePath = "dashboard/" + path;
+
+        try (InputStream in = plugin.getResource(resourcePath)) {
+            if (in == null) {
+                sendErrorResponse(httpExchange, 404, "Not Found");
+                return;
+            }
+
+            String contentType = Files.probeContentType(java.nio.file.Paths.get(path));
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+            httpExchange.getResponseHeaders().set("Content-Type", contentType);
+            httpExchange.sendResponseHeaders(200, in.available());
+            try (OutputStream os = httpExchange.getResponseBody()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = in.read(buffer)) != -1) {
+                    os.write(buffer, 0, bytesRead);
+                }
+            }
+        }
+    }
+
+    private void sendResponse(HttpExchange httpExchange, int statusCode, String response) throws IOException {
+        httpExchange.sendResponseHeaders(statusCode, response.length());
+        try (OutputStream os = httpExchange.getResponseBody()) {
+            os.write(response.getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    public String getResourcePackUrl() {
+        return resourcePackUrl;
     }
 
     public void stop() {
@@ -67,7 +258,15 @@ public class WebServer {
         }
     }
 
-    public String getResourcePackUrl() {
-        return resourcePackUrl;
+    private void sendJsonResponse(HttpExchange httpExchange, int statusCode, String jsonResponse) throws IOException {
+        httpExchange.getResponseHeaders().set("Content-Type", "application/json");
+        sendResponse(httpExchange, statusCode, jsonResponse);
+    }
+
+    private void sendErrorResponse(HttpExchange httpExchange, int statusCode, String message) throws IOException {
+        JsonObject errorResponse = new JsonObject();
+        errorResponse.addProperty("status", "error");
+        errorResponse.addProperty("message", message);
+        sendJsonResponse(httpExchange, statusCode, gson.toJson(errorResponse));
     }
 }

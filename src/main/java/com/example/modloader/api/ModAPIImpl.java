@@ -18,6 +18,7 @@ import java.net.URLClassLoader;
 import com.example.modloader.api.event.EventBus;
 import com.example.modloader.api.permissions.Permissions;
 import com.example.modloader.api.network.Networking;
+import com.example.modloader.api.world.ProceduralGenerationAPI;
 
 public class ModAPIImpl implements ModAPI {
 
@@ -43,6 +44,8 @@ public class ModAPIImpl implements ModAPI {
     private final EventBus eventBus;
     private final Permissions permissions;
     private final Networking networking;
+    private final com.example.modloader.api.gui.GUIAPI guiAPI;
+    private final ProceduralGenerationAPI proceduralGenerationAPI;
 
     public ModAPIImpl(JavaPlugin plugin, CustomItemRegistry itemRegistry, CustomMobRegistry mobRegistry, CustomBlockRegistry blockRegistry, CustomCommandRegistry commandRegistry, CustomEventListenerRegistry eventListenerRegistry, CustomRecipeRegistry recipeRegistry, CustomWorldGeneratorRegistry worldGeneratorRegistry, CustomEnchantmentAPI customEnchantmentAPI, CustomPotionEffectAPI customPotionEffectAPI, CustomWorldGeneratorAPI customWorldGeneratorAPI, com.example.modloader.ModConfigManager modConfigManager, ModMessageAPI modMessageAPI, AssetManager assetManager, String modId, URLClassLoader modClassLoader, EventBus eventBus) {
         this.itemRegistry = itemRegistry;
@@ -67,21 +70,35 @@ public class ModAPIImpl implements ModAPI {
         this.eventBus = eventBus;
         this.permissions = new Permissions();
         this.networking = new Networking(plugin);
+        this.guiAPI = new com.example.modloader.api.gui.GUIAPIImpl(plugin);
+        this.proceduralGenerationAPI = new com.example.modloader.api.world.ProceduralGenerationAPIImpl(plugin);
     }
 
     @Override
     public void registerItem(String itemId, ItemStack item) {
-        itemRegistry.register(itemId, item);
+        com.example.modloader.api.event.PreRegisterItemEvent event = new com.example.modloader.api.event.PreRegisterItemEvent(itemId, item);
+        eventBus.post(event);
+        if (!event.isCancelled()) {
+            itemRegistry.register(itemId, item);
+        }
     }
 
     @Override
     public void registerMob(com.example.modloader.CustomMob customMob) {
-        mobRegistry.register(customMob);
+        com.example.modloader.api.event.PreRegisterMobEvent event = new com.example.modloader.api.event.PreRegisterMobEvent(customMob);
+        eventBus.post(event);
+        if (!event.isCancelled()) {
+            mobRegistry.register(customMob);
+        }
     }
 
     @Override
     public void registerBlock(com.example.modloader.CustomBlock customBlock) {
-        blockRegistry.register(customBlock);
+        com.example.modloader.api.event.PreRegisterBlockEvent event = new com.example.modloader.api.event.PreRegisterBlockEvent(customBlock);
+        eventBus.post(event);
+        if (!event.isCancelled()) {
+            blockRegistry.register(customBlock);
+        }
     }
 
     @Override
@@ -180,8 +197,8 @@ public class ModAPIImpl implements ModAPI {
     }
 
     @Override
-    public org.bukkit.configuration.file.YamlConfiguration getModConfig(String modId) {
-        return modConfigManager.getModConfig(modId);
+    public <T extends com.example.modloader.api.config.ModConfig> T getModConfig(Class<T> configClass) {
+        return modConfigManager.getModConfig(modId, configClass);
     }
 
     @Override
@@ -202,5 +219,15 @@ public class ModAPIImpl implements ModAPI {
     @Override
     public Networking getNetworking() {
         return networking;
+    }
+
+    @Override
+    public com.example.modloader.api.gui.GUIAPI getGUIAPI() {
+        return guiAPI;
+    }
+
+    @Override
+    public ProceduralGenerationAPI getProceduralGenerationAPI() {
+        return proceduralGenerationAPI;
     }
 }

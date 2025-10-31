@@ -6,30 +6,73 @@ Welcome to the official documentation for ModLoader999, a powerful PaperMC plugi
 
 ### Installation
 
-1.  **Download:** Get the latest `ModLoader999-x.x.x.jar` from the official release page.
+1.  **Download:** Obtain the latest `ModLoader999-x.x.x.jar` from the official release page.
 2.  **Install:** Place the downloaded `.jar` file into your server's `plugins` folder.
 3.  **Restart:** Start or restart your server to generate the necessary configuration files and folders.
 4.  **Add Mods:** Place your desired mod files (with a `.modloader999` extension) into the `plugins/ModLoader999/Mods/` directory.
-5.  **Manage Mods:** Use the following in-game commands (requires appropriate permissions):
-    *   `/modloader list`: List all loaded and available mods with their status.
-    *   `/modloader info <modName>`: Show detailed information about a specific mod, including its dependencies and current state.
-    *   `/modloader reload`: Reload all mods, disabling and then re-enabling them based on their dependencies.
-    *   `/modloader enable <modName>`: Enable a previously disabled or unloaded mod, resolving its dependencies.
-    *   `/modloader disable <modName>`: Disable an enabled mod. Dependent mods will prevent disabling.
-    *   `/modloader load <modName>`: Load the classes of a mod without enabling it (useful for debugging or specific scenarios).
-    *   `/modloader unload <modName>`: Unload a mod completely from memory. Dependent mods will prevent unloading.
+5.  **Manage Mods:** Utilize the following in-game commands, requiring appropriate permissions:
+    *   `/modloader list`: Displays all loaded and available mods along with their current status.
+    *   `/modloader info <modName>`: Provides detailed information about a specific mod, including its dependencies and current state.
+    *   `/modloader reload`: Initiates a full reload of all mods, disabling and then re-enabling them based on their defined dependencies.
+    *   `/modloader enable <modName>`: Activates a previously disabled or unloaded mod, automatically resolving its dependencies.
+    *   `/modloader disable <modName>`: Deactivates an enabled mod. Note that dependent mods will prevent a mod from being disabled.
+    *   `/modloader load <modName>`: Loads a mod that was previously unloaded from memory.
+    *   `/modloader hotreload <modName>`: Performs a hot-reload of a single mod, involving its temporary disabling, unloading, reloading, and re-enabling for rapid development iteration.
+    *   `/modloader browse`: Presents a list of all mods currently available within the ModLoader999 repository.
+    *   `/modloader gui`: Opens an interactive in-game graphical user interface for comprehensive mod management.
+    *   `/publishmod <modName>`: Publishes your mod to the ModLoader999 repository if it is not already present.
+    *   `/modloader unload <modName>`: Completely unloads a mod from server memory. Dependent mods will prevent a mod from being unloaded.
+
+### Security and Permissions (`mod.policy`)
+
+ModLoader999 incorporates a robust security system leveraging Java's Security Manager. This system is enforced by the `mod.policy` file, located in your `plugins/ModLoader999/` directory. This file meticulously defines the permissions granted to each mod, thereby restricting their access to sensitive server resources such as file systems, network connections, and system properties.
+
+**Understanding `mod.policy`:**
+
+The `mod.policy` file adheres to a standard Java policy file syntax. By default, mods are granted a limited set of permissions to ensure optimal server stability and security. You possess the flexibility to customize this file, allowing you to grant additional permissions to trusted mods or impose further restrictions as deemed necessary.
+
+**Example Customization:**
+
+To grant a specific mod, identified as `MyTrustedMod`, read access to an external directory located at `/path/to/external/data`, you would append a `grant` entry similar to the following:
+
+```policy
+grant codeBase "file:${user.dir}/plugins/ModLoader999/Mods/MyTrustedMod-1.0.0.modloader999" {
+    permission java.io.FilePermission "/path/to/external/data/-", "read";
+};
+```
+
+**Important Considerations:**
+
+*   **Caution:** Incorrect modifications to the `mod.policy` file can severely compromise your server's security posture. It is imperative to grant only the absolutely necessary permissions and exclusively to mods that are fully trusted.
+*   **Mod-Specific Permissions:** Permissions are typically assigned based on the mod's JAR file location, specified by `codeBase`. Ensure that the `codeBase` path accurately reflects the deployment location of your mod.
+*   **Reloading:** Any alterations made to the `mod.policy` file necessitate a full server restart for the changes to be effectively applied.
+
+### Web-Based Management Dashboard
+
+ModLoader999 integrates a lightweight yet comprehensive web server that hosts a management dashboard. This dashboard empowers server owners to monitor mod status, control mod activation and deactivation, configure mod settings, and perform various other management tasks directly from a web browser.
+
+**Accessing the Dashboard:**
+
+The dashboard is readily accessible via your server's IP address combined with the configured web server port, which defaults to `25566`. For instance, if your server's IP address is `192.168.1.100`, you would navigate to the dashboard by entering `http://192.168.1.100:25566/` into your web browser.
+
+**Features:**
+
+*   **Mod Listing:** View an exhaustive list of all installed mods, complete with their versions, authors, descriptive summaries, and current operational status.
+*   **Mod Toggling:** Effortlessly enable or disable mods with a single, intuitive click.
+*   **Mod Hot-Reloading:** Initiate a hot-reload for individual mods, facilitating rapid testing and deployment during development cycles.
+*   **Configuration Management:** Access and modify mod configuration files directly through the web interface, providing a convenient way to fine-tune mod behavior.
 
 ## For Mod Developers
 
-This guide provides a comprehensive overview of how to create your own mods using the ModLoader999 API.
+This comprehensive guide provides an in-depth overview of the process involved in creating custom mods utilizing the ModLoader999 API.
 
 ### Project Setup
 
-To begin, you'll need to set up a Java project using either Maven or Gradle.
+To commence mod development, it is essential to establish a Java project using either Maven or Gradle as your build automation tool.
 
 #### Maven
 
-1.  **Add Repositories:** Add the PaperMC and ModLoader999 repositories to your `pom.xml`:
+1.  **Add Repositories:** Incorporate the PaperMC and ModLoader999 repositories into your `pom.xml` file. This ensures that your project can locate and download the necessary dependencies.
 
     ```xml
     <repositories>
@@ -44,7 +87,7 @@ To begin, you'll need to set up a Java project using either Maven or Gradle.
     </repositories>
     ```
 
-2.  **Add Dependencies:** Add the Paper API and ModLoader999 API as dependencies:
+2.  **Add Dependencies:** Declare the Paper API and ModLoader999 API as dependencies within your `pom.xml`. The `provided` scope indicates that these dependencies will be supplied by the server runtime and should not be bundled with your mod.
 
     ```xml
     <dependencies>
@@ -57,7 +100,7 @@ To begin, you'll need to set up a Java project using either Maven or Gradle.
         <dependency>
             <groupId>io.github.erik99948</groupId>
             <artifactId>modloader</artifactId>
-            <version>1.1.0</version>
+            <version>3.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -65,7 +108,7 @@ To begin, you'll need to set up a Java project using either Maven or Gradle.
 
 #### Gradle
 
-1.  **Add Repositories:** Add the following to your `build.gradle` file:
+1.  **Add Repositories:** Include the following repository declarations in your `build.gradle` file. These repositories are crucial for resolving project dependencies.
 
     ```gradle
     repositories {
@@ -75,7 +118,7 @@ To begin, you'll need to set up a Java project using either Maven or Gradle.
     }
     ```
 
-2.  **Add Dependencies:**
+2.  **Add Dependencies:** Specify the Paper API and ModLoader999 API as `compileOnly` dependencies. This ensures that the APIs are available during compilation but are not bundled into your final mod JAR, as they are provided by the server environment.
 
     ```gradle
     dependencies {
@@ -86,33 +129,48 @@ To begin, you'll need to set up a Java project using either Maven or Gradle.
 
 ### The `modinfo.json` File
 
-Every mod must contain a `modinfo.json` file in the `src/main/resources` directory. This file provides essential metadata about your mod.
+Every mod developed for ModLoader999 must contain a `modinfo.json` file, strategically placed within the `src/main/resources` directory of your project. This JSON file serves as a critical manifest, providing essential metadata that ModLoader999 utilizes to identify, load, and manage your mod.
 
 ```json
 {
+  "id": "myfirstmod",
   "main": "com.yourname.mod.MyMod",
   "name": "MyFirstMod",
   "version": "1.0.0",
   "author": "YourName",
+  "description": "A brief description of what your mod does.",
+  "apiVersion": "1.0.0",
   "dependencies": {
     "AnotherMod": "^1.2.0"
+  },
+  "softDependencies": [
+    "OptionalMod"
+  ],
+  "customProperties": {
+    "setting1": "value1",
+    "setting2": "value2"
   }
 }
 ```
 
-*   `main`: The fully qualified name of your main class that implements `ModInitializer`.
-*   `name`: The unique name of your mod.
-*   `version`: Your mod's version (should follow SemVer).
-*   `author`: Your name.
-*   `dependencies` (Optional): A map of other mods that your mod depends on, with their required version range.
+*   `id`: A unique identifier for your mod, typically in lowercase and without spaces (e.g., `myfirstmod`).
+*   `main`: The fully qualified class name of your mod's primary entry point, which must implement the `ModInitializer` interface (e.g., `com.yourname.mod.MyMod`).
+*   `name`: The human-readable name of your mod (e.g., `MyFirstMod`).
+*   `version`: The current version of your mod. It is highly recommended to adhere to [Semantic Versioning (SemVer)](https://semver.org/) principles (e.g., `1.0.0`).
+*   `author`: The name of the mod developer or team.
+*   `description`: A concise summary of your mod's functionality and purpose.
+*   `apiVersion`: The specific version of the ModLoader999 API that your mod is built against. This crucial field ensures compatibility and prevents your mod from loading with incompatible ModLoader999 versions.
+*   `dependencies` (Optional): A JSON object listing other mods that your mod strictly requires to function correctly. The keys are the mod IDs, and the values are the required [Semantic Versioning ranges](https://semver.org/) (e.g., `"AnotherMod": "^1.2.0"`). If any hard dependency is not met, your mod will not be loaded.
+*   `softDependencies` (Optional): A JSON array of mod IDs that your mod can optionally depend on. If these mods are present on the server, ModLoader999 will ensure they are loaded before your mod. However, if they are absent, your mod will still load without error, allowing for enhanced functionality when optional dependencies are met.
+*   `customProperties` (Optional): A JSON object allowing you to define any custom key-value pairs specific to your mod. These properties can be accessed programmatically and are also exposed via the web dashboard for configuration.
 
 ### Dependency Injection
 
-ModLoader999 uses a dependency injection system to manage dependencies between mods and within a single mod. You can inject your own classes and classes from other mods that are exposed as APIs.
+ModLoader999 employs a sophisticated dependency injection (DI) system to streamline the management of dependencies both within your mod and between different mods. This system empowers you to effortlessly inject your own classes and leverage APIs exposed by other mods.
 
 #### Intra-mod Dependencies
 
-To inject a dependency within your own mod, you need to bind it in the `configure` method of your `ModInitializer` and then use constructor injection to get the instance.
+To manage dependencies exclusively within your own mod, you must first bind the desired class or interface within the `configure` method of your `ModInitializer`. Subsequently, you can utilize constructor injection to automatically receive an instance of that bound dependency. The DI system also supports advanced features such as `@Provides` methods for complex object creation logic, `@Named` annotations for disambiguating multiple implementations of the same interface, and `@Singleton` to control the lifecycle of your objects, ensuring only a single instance exists throughout the application.
 
 **Greeter.java:**
 ```java
@@ -132,6 +190,8 @@ package com.example.mod;
 import com.example.modloader.api.ModAPI;
 import com.example.modloader.api.ModInitializer;
 import com.example.modloader.api.dependencyinjection.Binder;
+import com.example.modloader.api.dependencyinjection.Provides;
+import com.example.modloader.api.dependencyinjection.Singleton;
 
 public class MyMod implements ModInitializer {
 
@@ -146,17 +206,33 @@ public class MyMod implements ModInitializer {
         binder.bind(Greeter.class, new Greeter());
     }
 
+    @Provides
+    @Singleton
+    public AnotherService provideAnotherService() {
+        return new AnotherService();
+    }
+
     @Override
     public void onLoad(ModAPI api) {
         System.out.println(greeter.getGreeting());
     }
-    // ... other methods
 }
 ```
 
-#### Inter-mod Dependencies
+**AnotherService.java:**
+```java
+package com.example.mod;
 
-To use an API from another mod, you first need to declare the dependency in your `modinfo.json` file. Then, you can inject the API class using constructor injection. The other mod needs to expose the API using the `@API` annotation.
+public class AnotherService {
+    public String getServiceMessage() {
+        return "Message from another service!";
+    }
+}
+```
+
+#### Inter-mod Dependencies and API Providers/Consumers
+
+To seamlessly integrate and utilize an API provided by another mod, you must first declare this dependency within your `modinfo.json` file. Following this declaration, you can effortlessly inject the API class directly into your mod's constructor. The providing mod is responsible for exposing its API by annotating the API interface or class with `@API`. ModLoader999's advanced dependency injection system now fully supports scenarios where multiple mods might provide different implementations of the same API. In such cases, you have the flexibility to inject a `List<YourAPIInterface>` into your constructor to receive all currently registered implementations of that API.
 
 **CoolMod's `CoolAPI.java`:**
 ```java
@@ -193,61 +269,132 @@ import com.example.coolmod.CoolAPI;
 import com.example.modloader.api.ModAPI;
 import com.example.modloader.api.ModInitializer;
 import com.example.modloader.api.dependencyinjection.Binder;
+import java.util.List;
 
 public class AwesomeMod implements ModInitializer {
 
     private final CoolAPI coolAPI;
+    private final List<CoolAPI> allCoolAPIs;
 
-    public AwesomeMod(CoolAPI coolAPI) {
+    public AwesomeMod(CoolAPI coolAPI, List<CoolAPI> allCoolAPIs) {
         this.coolAPI = coolAPI;
+        this.allCoolAPIs = allCoolAPIs;
     }
 
     @Override
     public void configure(Binder binder) {
-        // No need to bind CoolAPI here, the ModInjector will find it in the ModAPIRegistry
     }
 
     @Override
     public void onLoad(ModAPI api) {
         System.out.println(coolAPI.getCoolMessage());
+        allCoolAPIs.forEach(apiInstance -> System.out.println("All Cool APIs: " + apiInstance.getCoolMessage()));
     }
-    // ... other methods
 }
 ```
 
 ### The `ModInitializer` Class
 
-Your mod's main class must implement the `ModInitializer` interface. The `onLoad` method is the entry point for your mod, where you will register all of your custom content. The `ModAPI` instance provided to `onLoad` is unique to your mod, ensuring that all registrations (commands, listeners, etc.) are automatically associated with your mod's lifecycle.
+Your mod's primary entry point must be a class that implements the `ModInitializer` interface. This interface mandates several methods that ModLoader999 invokes at distinct phases of your mod's lifecycle. The `onLoad` method serves as the central entry point for your mod, where you will typically register all of your custom content. The `ModAPI` instance provided to these lifecycle methods is uniquely scoped to your mod, ensuring that all registrations (such as commands, event listeners, etc.) are automatically associated with and managed by your mod's lifecycle.
+
+**Event Priorities and Cancellable Events:**
+
+ModLoader999's event bus system supports a comprehensive range of event priorities (`LOWEST`, `LOW`, `NORMAL`, `HIGH`, `HIGHEST`, `MONITOR`). These priorities allow you to precisely control the order in which event listeners are executed. Furthermore, many 'Pre' events (e.g., `PreRegisterBlockEvent`, `PreRegisterItemEvent`, `PreRegisterMobEvent`) are designed to be cancellable. This crucial feature provides your mod with the capability to intercept and prevent other mods' registrations or actions before they are finalized.
+
+To effectively listen to an event with a specific priority or to cancel a cancellable event, you can directly interact with the `EventBus` or register an `EventListener` configured with the desired priority.
+
+**Example of a Cancellable Pre-Event:**
+
+This example demonstrates how to prevent the registration of a block with a specific ID.
+
+```java
+api.getEventBus().register(PreRegisterBlockEvent.class, event -> {
+    if (event.getBlock().getId().equals("forbidden_block")) {
+        event.setCancelled(true);
+        System.out.println("Prevented registration of forbidden_block!");
+    }
+}, EventPriority.HIGHEST);
+```
+
+The lifecycle methods are:
+- `configure(Binder binder)`: This method is invoked first during your mod's loading sequence. It is the designated place for you to configure your mod's dependency injection bindings.
+- `onPreLoad(ModAPI api)`: Executed just before the main `onLoad` method. This phase is suitable for preliminary setup that doesn't require full API access.
+- `onLoad(ModAPI api)`: This is the core entry point for your mod. All primary content registration logic, such as items, blocks, and commands, should be implemented here.
+- `onPostLoad(ModAPI api)`: Called immediately after the `onLoad` method has successfully completed. This phase is ideal for post-load adjustments or inter-mod communication that relies on other mods being fully loaded.
+- `onEnable()`: Invoked when your mod is enabled. This typically occurs after all mods have been loaded and initialized.
+- `onPreDisable()`: Executed just before your mod is disabled. This is a suitable phase for any pre-disabling cleanup or state saving.
+- `onDisable()`: Called when your mod is disabled. Implement your primary cleanup and resource release logic here.
+- `onPostDisable()`: Invoked after your mod has been fully disabled. This is the final cleanup phase.
 
 ```java
 package com.yourname.mod;
 
 import com.example.modloader.api.ModAPI;
 import com.example.modloader.api.ModInitializer;
+import com.example.modloader.api.dependencyinjection.Binder;
 
 public class MyMod implements ModInitializer {
+
+    @Override
+    public void configure(Binder binder) {
+    }
+
+    @Override
+    public void onPreLoad(ModAPI api) {
+        System.out.println("My First Mod is about to load!");
+    }
+
     @Override
     public void onLoad(ModAPI api) {
         System.out.println("My First Mod is loading!");
-        // All registration logic goes here
+    }
+
+    @Override
+    public void onPostLoad(ModAPI api) {
+        System.out.println("My First Mod has loaded!");
+    }
+
+    @Override
+    public void onEnable() {
+        System.out.println("My First Mod is enabling!");
+    }
+
+    @Override
+    public void onPreDisable() {
+        System.out.println("My First Mod is about to disable!");
+    }
+
+    @Override
+    public void onDisable() {
+        System.out.println("My First Mod is disabling!");
+    }
+
+    @Override
+    public void onPostDisable() {
+        System.out.println("My First Mod has disabled!");
     }
 }
 ```
 
 ### Registering Content: A Deep Dive
 
-The `ModAPI` object provided in the `onLoad` method is your gateway to all of ModLoader999's features.
+The `ModAPI` object, meticulously provided in the `onLoad` method, serves as your comprehensive gateway to all of ModLoader999's powerful features and functionalities.
 
 #### Custom Items
 
-Custom items are created using standard Bukkit `ItemStack`s. The key is to use `CustomModelData` to link the item to a custom texture in your resource pack.
+Custom items are seamlessly integrated by utilizing standard Bukkit `ItemStack` objects. The pivotal aspect lies in employing `CustomModelData` to establish a definitive link between your custom item and its corresponding custom texture within your resource pack. This ensures that your custom items are visually represented as intended within the game.
 
 ```java
-// In onLoad(ModAPI api)
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import java.util.Arrays;
+
+// In your ModInitializer's onLoad(ModAPI api) method
 ItemStack myItem = new ItemStack(Material.DIAMOND_SWORD);
 ItemMeta meta = myItem.getItemMeta();
 meta.setDisplayName("§6Legendary Sword");
-meta.setLore(Arrays.asList("A sword of great power."));
+meta.setLore(Arrays.asList("A sword of great power.", "Forged in the fires of Mount Cinder."));
 meta.setCustomModelData(1337);
 myItem.setItemMeta(meta);
 
@@ -256,55 +403,85 @@ api.registerItem("legendary_sword", myItem);
 
 #### Custom Blocks
 
-Custom blocks are defined by a `CustomBlock` object, which specifies the base material, `CustomModelData`, and optional behaviors. Behaviors allow you to define custom logic for when a block is placed, broken, interacted with, receives redstone power, or explodes.
+Custom blocks are meticulously defined through a `CustomBlock` object. This object precisely specifies the base material, `CustomModelData` for resource pack integration, and a suite of optional behaviors. These behaviors empower you to define intricate custom logic that dictates how your block responds to various in-game events, including placement, destruction, player interaction, redstone power fluctuations, and explosive forces.
 
 ```java
-// In onLoad(ModAPI api)
+import com.example.modloader.CustomBlock;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.block.BlockRedstoneEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.inventory.ItemStack;
+import java.util.Arrays;
+import java.util.List;
+
+// In your ModInitializer's onLoad(ModAPI api) method
 CustomBlock myBlock = new CustomBlock(
-    "magic_crystal", // Unique ID for your block
-    Material.GLASS,    // The base material this custom block will look like
-    1338,              // CustomModelData for resource pack texture
-    "§bMagic Crystal", // Display name
-    Arrays.asList("A crystal that hums with energy."), // Lore
-    (event, block, player) -> player.sendMessage("You placed a magic crystal!"), // BlockPlaceBehavior
+    "magic_crystal",
+    Material.GLASS,
+    1338,
+    "§bMagic Crystal",
+    Arrays.asList("A crystal that hums with energy.", "Emits a soft, ethereal glow."),
     (event, block, player) -> {
-        player.sendMessage("You broke a magic crystal!");
-        // Custom break logic here, e.g., drop custom items
-    }, // BlockBreakBehavior
-    (event, block, player) -> player.sendMessage("You interacted with a magic crystal!"), // BlockInteractBehavior
+        player.sendMessage("You have placed a shimmering magic crystal!");
+        // Additional custom logic for block placement
+    },
+    (event, block, player) -> {
+        player.sendMessage("The magic crystal shatters with a faint chime!");
+        // Custom break logic, such as dropping unique items or triggering effects
+        block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(Material.DIAMOND));
+    },
+    (event, block, player) -> {
+        player.sendMessage("You feel a strange energy emanating from the crystal.");
+        // Custom interaction logic, like opening a GUI or applying a potion effect
+    },
     (event, block, oldCurrent, newCurrent) -> {
         if (newCurrent > 0 && oldCurrent == 0) {
             block.getWorld().strikeLightningEffect(block.getLocation());
+            block.getWorld().createExplosion(block.getLocation(), 1.0f, false, false);
         }
-    }, // BlockRedstoneBehavior
+    },
     (event, block, blockList, yield) -> {
         block.getWorld().createExplosion(block.getLocation(), 2.0f, false, false);
-        event.setCancelled(true); // Prevent default explosion behavior for this block
-    }, // BlockExplodeBehavior
-    Arrays.asList(new ItemStack(Material.DIAMOND)) // Custom drops when broken
+        event.setCancelled(true);
+    },
+    Arrays.asList(new ItemStack(Material.DIAMOND, 2)) // Custom drops when broken
 );
 api.registerBlock(myBlock);
 ```
 
 #### Custom Mobs
 
-Custom mobs are based on existing Minecraft entities. You can customize their stats, appearance, and behavior using `CustomMobGoal`s. You can also define custom spawners for natural generation.
+Custom mobs are built upon existing Minecraft entities, allowing for extensive customization of their statistics, visual appearance, and behavioral patterns through the implementation of `CustomMobGoal`s. Furthermore, you can define custom spawners to control their natural generation within the game world.
 
 ```java
-// In onLoad(ModAPI api)
+import com.example.modloader.CustomMob;
+import com.example.modloader.api.mob.CustomMobGoal;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-// 1. Define Custom Mob Goals (optional)
+// In your ModInitializer's onLoad(ModAPI api) method
+
+// 1. Define Custom Mob Goals (optional) - These define the mob's AI behavior.
 List<CustomMobGoal> goals = Arrays.asList(
-    new CustomMobGoal() { // Example: Simple follow goal
+    new CustomMobGoal() {
         @Override
         public boolean shouldStart(LivingEntity entity) {
-            // Start this goal if the mob has a target and is far from it
             return entity.getTarget() != null && entity.getTarget().getLocation().distance(entity.getLocation()) > 3;
         }
 
         @Override
         public void start(LivingEntity entity) {
-            entity.getWorld().playSound(entity.getLocation(), org.bukkit.Sound.ENTITY_ZOMBIE_AMBIENT, 1.0f, 1.0f);
+            entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_ZOMBIE_AMBIENT, 1.0f, 1.0f);
             entity.sendMessage("I see you!");
         }
 
@@ -315,46 +492,51 @@ List<CustomMobGoal> goals = Arrays.asList(
 
         @Override
         public void tick(LivingEntity entity) {
-            // Move towards the target
-            entity.getNavigation().moveTo(entity.getTarget(), 1.2); // 1.2 is speed multiplier
+            entity.getNavigation().moveTo(entity.getTarget(), 1.2);
         }
     }
 );
 
-// 2. Define the Custom Mob
+// 2. Define the Custom Mob - This sets up the mob's core properties.
 CustomMob myMob = new CustomMob(
-    "goblin_warrior", // Unique ID for your mob
-    org.bukkit.entity.EntityType.ZOMBIE, // Base entity type (e.g., ZOMBIE, SKELETON)
-    "§aGoblin Warrior", // Display name
-    25.0, // Max Health
-    4.0,  // Attack Damage
-    0.35, // Movement Speed
-    1339, // CustomModelData for resource pack model/texture
-    goals, // List of custom goals
-    null // Custom Attributes (e.g., Map.of(Attribute.GENERIC_ARMOR, 5.0))
+    "goblin_warrior",
+    EntityType.ZOMBIE,
+    "§aGoblin Warrior",
+    25.0,
+    4.0,
+    0.35,
+    1339,
+    goals,
+    Map.of(Attribute.GENERIC_ARMOR, 5.0, Attribute.GENERIC_MOVEMENT_SPEED, 0.4)
 );
 api.registerMob(myMob);
 
-// 3. (Optional) Register a Custom Mob Spawner for natural generation
+// 3. Register a Custom Mob Spawner (optional) - This controls where and how your mob naturally generates.
 api.registerMobSpawner((world, random, block) -> {
-    // Spawn a goblin warrior in forests with a 5% chance
     if (block.getBiome() == org.bukkit.block.Biome.FOREST && random.nextInt(100) < 5) {
-        // Spawn the mob at the block's location
         LivingEntity spawnedMob = (LivingEntity) api.getCustomMobRegistry().spawn("goblin_warrior", block.getLocation());
         if (spawnedMob != null) {
-            spawnedMob.setTarget(world.getPlayers().get(0)); // Example: target nearest player
+            // Example: Make the spawned mob target the nearest player
+            world.getPlayers().stream().min(Comparator.comparingDouble(p -> p.getLocation().distance(spawnedMob.getLocation())))
+                 .ifPresent(spawnedMob::setTarget);
         }
     }
-    return null; // Return null or a list of spawned entities
+    return null;
 });
 ```
 
 #### Custom Commands
 
-Register commands with tab completion support. Your `ModCommandExecutor` will handle both command execution and tab completion suggestions. Commands registered this way are automatically associated with your mod and will be unregistered when your mod is disabled or unloaded.
+Register custom commands with comprehensive tab completion support. Your `ModCommandExecutor` implementation will meticulously handle both the execution logic of the command and provide intelligent tab completion suggestions to players. Commands registered through this API are automatically associated with your mod's lifecycle, ensuring they are properly registered upon mod enablement and gracefully unregistered when your mod is disabled or unloaded.
 
 ```java
-// In onLoad(ModAPI api)
+import org.bukkit.command.CommandSender;
+import com.example.modloader.api.ModCommandExecutor;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+// In your ModInitializer's onLoad(ModAPI api) method
 api.registerCommand("modhelp", new ModCommandExecutor() {
     @Override
     public boolean onCommand(CommandSender sender, String commandLabel, String[] args) {
@@ -382,25 +564,31 @@ api.registerCommand("modhelp", new ModCommandExecutor() {
                          .filter(s -> s.startsWith(args[0].toLowerCase()))
                          .collect(Collectors.toList());
         }
-        return null;
+        return Collections.emptyList();
     }
 });
 ```
 
 #### Event Listeners
 
-Register standard Bukkit event listeners to react to in-game events. Any class implementing `org.bukkit.event.Listener` can be registered. Listeners registered this way are automatically associated with your mod and will be unregistered when your mod is disabled or unloaded.
+Register standard Bukkit event listeners to react dynamically to a wide array of in-game events. Any class that properly implements `org.bukkit.event.Listener` can be registered. Event listeners registered via this mechanism are automatically and intelligently associated with your mod's lifecycle, guaranteeing their proper activation when your mod is enabled and their graceful unregistration when your mod is disabled or unloaded.
 
 ```java
-// In onLoad(ModAPI api)
+import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.Material;
+
+// In your ModInitializer's onLoad(ModAPI api) method
 api.registerListener(new Listener() {
     @EventHandler
-    public void onPlayerJoin(org.bukkit.event.player.PlayerJoinEvent event) {
+    public void onPlayerJoin(PlayerJoinEvent event) {
         event.getPlayer().sendMessage("§bWelcome, " + event.getPlayer().getName() + "! This server is running a cool mod!");
     }
 
     @EventHandler
-    public void onBlockBreak(org.bukkit.event.block.BlockBreakEvent event) {
+    public void onBlockBreak(BlockBreakEvent event) {
         if (event.getBlock().getType() == Material.STONE) {
             event.getPlayer().sendMessage("§7You broke some stone!");
         }
@@ -410,40 +598,60 @@ api.registerListener(new Listener() {
 
 #### Custom Recipes
 
-Register custom crafting recipes for your items. You can use `ShapedRecipe`, `ShapelessRecipe`, or `FurnaceRecipe`.
+Register custom crafting recipes for your unique items, enabling players to craft them within the game. The API supports various recipe types, including `ShapedRecipe` for structured crafting, `ShapelessRecipe` for unordered ingredients, and `FurnaceRecipe` for smelting processes.
 
 ```java
-// In onLoad(ModAPI api)
-// Assumes 'myItem' is the ItemStack for "legendary_sword" from a previous registration
-NamespacedKey key = new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), "legendary_sword_recipe");
-ShapedRecipe recipe = new ShapedRecipe(key, myItem);
-recipe.shape(" D ", " D ", " S "); // D = Diamond, S = Stick
-recipe.setIngredient('D', Material.DIAMOND);
-recipe.setIngredient('S', Material.STICK);
-api.registerRecipe(recipe);
+import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.FurnaceRecipe;
+import org.bukkit.Material;
+import org.bukkit.plugin.java.JavaPlugin;
 
-// Example: Shapeless recipe for 9 dirt from 1 grass block
-NamespacedKey dirtKey = new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), "dirt_from_grass");
-ShapelessRecipe dirtRecipe = new ShapelessRecipe(dirtKey, new ItemStack(Material.DIRT, 9));
-dirtRecipe.addIngredient(Material.GRASS_BLOCK);
-api.registerRecipe(dirtRecipe);
+// In your ModInitializer's onLoad(ModAPI api) method
+
+// Assume 'myItem' is an ItemStack for a custom item previously registered
+ItemStack myItem = new ItemStack(Material.DIAMOND_SWORD);
+
+// Shaped Recipe: Craft a legendary sword using diamonds and sticks
+NamespacedKey shapedKey = new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), "legendary_sword_recipe");
+ShapedRecipe shapedRecipe = new ShapedRecipe(shapedKey, myItem);
+shapedRecipe.shape(" D ", " D ", " S "); // D = Diamond, S = Stick
+shapedRecipe.setIngredient('D', Material.DIAMOND);
+shapedRecipe.setIngredient('S', Material.STICK);
+api.registerRecipe(shapedRecipe);
+
+// Shapeless Recipe: Craft 9 dirt blocks from 1 grass block
+NamespacedKey shapelessKey = new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), "dirt_from_grass");
+ShapelessRecipe shapelessRecipe = new ShapelessRecipe(shapelessKey, new ItemStack(Material.DIRT, 9));
+shapelessRecipe.addIngredient(Material.GRASS_BLOCK);
+api.registerRecipe(shapelessRecipe);
+
+// Furnace Recipe: Smelt raw iron into an iron ingot
+NamespacedKey furnaceKey = new NamespacedKey(JavaPlugin.getProvidingPlugin(getClass()), "iron_ingot_smelting");
+FurnaceRecipe furnaceRecipe = new FurnaceRecipe(furnaceKey, new ItemStack(Material.IRON_INGOT), Material.RAW_IRON, 0.7F, 200);
+api.registerRecipe(furnaceRecipe);
 ```
 
 #### Custom Enchantments
 
-Create unique enchantments. Note that you must implement the enchantment's effects yourself using event listeners, as ModLoader999 only handles the registration of the enchantment type.
+Create and register unique enchantments that extend the gameplay experience. It is important to note that while ModLoader999 handles the registration of the enchantment type, you are responsible for implementing the actual effects and behaviors of the enchantment through custom event listeners.
 
 ```java
-// 1. Create your CustomEnchantment class
-// (This class should be in your mod's package, e.g., com.yourname.mod)
-package com.yourname.mod;
-
 import com.example.modloader.CustomEnchantment;
 import org.bukkit.enchantments.EnchantmentTarget;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.event.Listener;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.entity.LivingEntity;
+import java.util.Comparator;
 
+// 1. Define your CustomEnchantment class
+// This class should reside within your mod's package (e.g., com.yourname.mod).
 public class LifestealEnchantment extends CustomEnchantment {
     public LifestealEnchantment(JavaPlugin plugin) {
         super(plugin, "lifesteal", "Lifesteal", 3, EnchantmentTarget.WEAPON, false, false);
@@ -460,15 +668,14 @@ public class LifestealEnchantment extends CustomEnchantment {
     }
 }
 
-// 2. Register it in your ModInitializer's onLoad(ModAPI api) method
-// In onLoad(ModAPI api)
+// 2. Register the enchantment in your ModInitializer's onLoad(ModAPI api) method
 CustomEnchantmentAPI enchantmentAPI = api.getCustomEnchantmentAPI();
 enchantmentAPI.registerEnchantment(new LifestealEnchantment(JavaPlugin.getProvidingPlugin(getClass())));
 
 // 3. Implement the enchantment's effects using an Event Listener
 api.registerListener(new Listener() {
     @EventHandler
-    public void onDamage(org.bukkit.event.entity.EntityDamageByEntityEvent event) {
+    public void onDamage(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof LivingEntity && event.getEntity() instanceof LivingEntity) {
             LivingEntity attacker = (LivingEntity) event.getDamager();
             ItemStack weapon = attacker.getEquipment().getItemInMainHand();
@@ -476,7 +683,7 @@ api.registerListener(new Listener() {
             LifestealEnchantment lifesteal = (LifestealEnchantment) enchantmentAPI.getEnchantment("lifesteal");
             if (lifesteal != null && weapon.containsEnchantment(lifesteal)) {
                 int level = weapon.getEnchantmentLevel(lifesteal);
-                double healAmount = event.getDamage() * (0.05 * level); // Heal 5% per level
+                double healAmount = event.getDamage() * (0.05 * level);
                 attacker.setHealth(Math.min(attacker.getMaxHealth(), attacker.getHealth() + healAmount));
                 attacker.sendMessage("§aYou lifesteal " + String.format("%.1f", healAmount) + " health!");
             }
@@ -487,253 +694,595 @@ api.registerListener(new Listener() {
 
 #### Custom Potion Effects
 
-Define custom potion effects. Like enchantments, you'll need to implement the actual effects yourself.
+Define and register custom potion effects to introduce novel gameplay mechanics. Similar to enchantments, while ModLoader999 handles the registration of the potion effect type, you are responsible for implementing the actual effects and their associated logic through custom event listeners or scheduled tasks.
 
 ```java
-// 1. Create your CustomPotionEffectType class
-// (This class should be in your mod's package, e.g., com.yourname.mod)
-package com.yourname.mod;
-
 import com.example.modloader.CustomPotionEffectType;
 import org.bukkit.Color;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.Bukkit;
 
+// 1. Define your CustomPotionEffectType class
+// This class should reside within your mod's package (e.g., com.yourname.mod).
 public class PhotosynthesisEffect extends CustomPotionEffectType {
     public PhotosynthesisEffect(JavaPlugin plugin) {
         super(plugin, "photosynthesis", "Photosynthesis", Color.fromRGB(100, 200, 50), false, null);
     }
 }
 
-// 2. Register it in your ModInitializer's onLoad(ModAPI api) method
-// In onLoad(ModAPI api)
+// 2. Register the potion effect in your ModInitializer's onLoad(ModAPI api) method
 CustomPotionEffectAPI potionAPI = api.getCustomPotionEffectAPI();
 potionAPI.registerPotionEffectType(new PhotosynthesisEffect(JavaPlugin.getProvidingPlugin(getClass())));
 
-// 3. Implement the potion effect's logic (e.g., using a BukkitRunnable)
-new org.bukkit.scheduler.BukkitRunnable() {
+// 3. Implement the potion effect's logic using a BukkitRunnable for periodic checks
+new BukkitRunnable() {
     @Override
     public void run() {
         PhotosynthesisEffect photosynthesis = (PhotosynthesisEffect) potionAPI.getPotionEffectType("photosynthesis");
         if (photosynthesis == null) return;
 
-        for (org.bukkit.entity.Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
+        for (org.bukkit.entity.Player player : Bukkit.getOnlinePlayers()) {
             if (player.hasPotionEffect(photosynthesis)) {
-                // Check if player is in sunlight
                 if (player.getWorld().isDayTime() && player.getLocation().getBlock().getLightFromSky() == 15) {
-                    player.setFoodLevel(Math.min(20, player.getFoodLevel() + 1)); // Restore food
-                    player.setSaturation(Math.min(20, player.getSaturation() + 1)); // Restore saturation
+                    player.setFoodLevel(Math.min(20, player.getFoodLevel() + 1));
+                    player.setSaturation(Math.min(20, player.getSaturation() + 1));
                 }
             }
         }
     }
-}.runTaskTimer(JavaPlugin.getProvidingPlugin(getClass()), 0L, 40L); // Run every 2 seconds
+}.runTaskTimer(JavaPlugin.getProvidingPlugin(getClass()), 0L, 40L);
 ```
 
 #### World Generation
 
-ModLoader999 provides extensive tools to customize world generation, including custom ore, tree, structure, and general populators. You can target specific worlds and biomes.
+ModLoader999 provides an extensive suite of tools to meticulously customize world generation. This includes the ability to define custom ore, tree, and structure generators, as well as general world populators. You can precisely target specific worlds and biomes for your generation logic. Furthermore, the API offers enhanced functionalities for Biome customization, Custom Dimension Providers, and advanced Procedural Generation Utilities.
+
+**Biome API Enhancements:**
+
+Define highly customized biomes with granular control over their visual properties, including sky, fog, water, grass, and foliage colors. You can also specify ambient particles, sounds, temperature, humidity, and precipitation characteristics.
 
 ```java
-// In onLoad(ModAPI api)
+import com.example.modloader.api.world.CustomBiome;
+import org.bukkit.block.Biome;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.Color;
 
-// Register a custom ore to generate in specific biomes (e.g., mountains)
-api.registerOreGenerator((world, random, chunkX, chunkZ) -> {
-    // Generate a custom ore (e.g., Material.EMERALD_ORE) 10% of the time
-    if (random.nextInt(10) == 0) {
-        int x = chunkX * 16 + random.nextInt(16);
-        int z = chunkZ * 16 + random.nextInt(16);
-        int y = random.nextInt(60) + 60; // Generate between y=60 and y=120
-        world.getBlockAt(x, y, z).setType(Material.EMERALD_ORE);
-    }
-}, null, org.bukkit.block.Biome.WINDSWEPT_HILLS, org.bukkit.block.Biome.SNOWY_SLOPES);
+CustomWorldGeneratorAPI worldGenAPI = api.getCustomWorldGeneratorAPI();
 
-// Register a general world populator to add flower patches in plains biomes of the "world" world
-api.registerWorldPopulator((world, random, chunk) -> {
-    if (random.nextInt(5) == 0) { // 20% chance per chunk
-        int x = random.nextInt(16);
-        int z = random.nextInt(16);
-        int y = chunk.getHighestBlockYAt(x, z); // Get highest block at this x,z
-        chunk.getBlock(x, y, z).setType(Material.LILAC);
-    }
-}, new String[]{"world"}, org.bukkit.block.Biome.PLAINS);
+CustomBiome customForestBiome = new CustomBiome() {
+    @Override
+    public String getId() { return "my_custom_forest"; }
+    @Override
+    public String getName() { return "Mystic Forest"; }
+    @Override
+    public Biome getBaseBiome() { return Biome.FOREST; }
+    @Override
+    public Color getSkyColor() { return Color.fromRGB(100, 150, 200); }
+    @Override
+    public Color getFogColor() { return Color.fromRGB(150, 150, 150); }
+    @Override
+    public Color getWaterColor() { return Color.fromRGB(50, 100, 200); }
+    @Override
+    public Color getWaterFogColor() { return Color.fromRGB(50, 100, 150); }
+    @Override
+    public Color getGrassColor() { return Color.fromRGB(50, 150, 50); }
+    @Override
+    public Color getFoliageColor() { return Color.fromRGB(0, 100, 0); }
+    @Override
+    public Particle getAmbientParticle() { return Particle.CRIT; }
+    @Override
+    public int getAmbientParticleCount() { return 5; }
+    @Override
+    public double getAmbientParticleChance() { return 0.1; }
+    @Override
+    public Sound getAmbientSound() { return Sound.AMBIENT_CAVE; }
+    @Override
+    public double getAmbientSoundVolume() { return 0.5; }
+    @Override
+    public double getAmbientSoundPitch() { return 1.2; }
+    @Override
+    public float getTemperature() { return 0.7f; }
+    @Override
+    public float getHumidity() { return 0.8f; }
+    @Override
+    public boolean hasPrecipitation() { return true; }
+};
+worldGenAPI.registerCustomBiome(customForestBiome.getId(), customForestBiome);
+```
 
-// Register a custom tree generator for a specific world
-api.registerTreeGenerator((world, random, x, y, z) -> {
-    if (random.nextInt(50) == 0) { // 2% chance per tree attempt
-        // Example: Generate a simple 2-block high custom tree
-        world.getBlockAt(x, y, z).setType(Material.OAK_LOG);
-        world.getBlockAt(x, y + 1, z).setType(Material.OAK_LOG);
-        world.getBlockAt(x, y + 2, z).setType(Material.OAK_LEAVES);
-    }
-}, new String[]{"my_custom_world"}, null);
+**Custom Dimension Providers:**
 
-// Register a custom structure generator (e.g., a small ruin)
-api.registerStructureGenerator((world, random, chunkX, chunkZ) -> {
-    if (random.nextInt(200) == 0) { // 0.5% chance per chunk
-        int x = chunkX * 16 + random.nextInt(16);
-        int z = chunkZ * 16 + random.nextInt(16);
-        int y = world.getHighestBlockYAt(x, z) - 1; // Spawn on ground
+Implement a more abstract and flexible framework for mods to define entirely new dimensions. This includes granular control over custom physics, sky rendering, fog effects, and other environmental properties.
 
-        // Simple 3x3 stone platform
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                world.getBlockAt(x + dx, y, z + dz).setType(Material.COBBLESTONE);
-            }
-        }
-        return true;
-    }
-    return false;
-}, null, org.bukkit.block.Biome.DESERT);
+```java
+import com.example.modloader.api.world.CustomDimension;
+import org.bukkit.World;
+import org.bukkit.generator.ChunkGenerator;
 
-// Advanced: Register a CustomChunkGenerator for a new world
-// This gives you full control over how chunks are generated.
-// You would typically define MyFlatWorldGenerator in your mod.
-// api.getCustomWorldGeneratorAPI().registerCustomChunkGenerator("my_flat_world", new MyFlatWorldGenerator());
+DimensionAPI dimensionAPI = api.getDimensionAPI();
+
+// Define a custom dimension with specific properties
+CustomDimension voidDimension = new CustomDimension() {
+    @Override
+    public String getId() { return "my_void_dimension"; }
+    @Override
+    public String getName() { return "The Void"; }
+    @Override
+    public World.Environment getEnvironment() { return World.Environment.THE_END; } // Utilizing THE_END environment for void-like characteristics
+    @Override
+    public long getSeed() { return 12345L; }
+    @Override
+    public boolean isHardcore() { return false; }
+    @Override
+    public boolean hasStorm() { return false; }
+    @Override
+    public boolean isThundering() { return false; }
+    @Override
+    public long getFullTime() { return 18000L; } // Configures the dimension to always be night
+    @Override
+    public double getGravityFactor() { return 0.5; } // Sets gravity to half the normal factor
+    @Override
+    public String getSkyColorHex() { return "#000000"; } // Defines a black sky color
+    @Override
+    public String getFogColorHex() { return "#111111"; } // Sets a dark fog color
+    @Override
+    public ChunkGenerator getChunkGenerator() { return new VoidChunkGenerator(); } // Assigns a custom chunk generator for void generation
+};
+dimensionAPI.registerCustomDimension(voidDimension.getId(), voidDimension);
+
+// To create a world instance using this custom dimension definition:
+World newWorldInstance = dimensionAPI.createWorld(voidDimension);
+```
+
+**Procedural Generation Utilities:**
+
+Access a comprehensive set of helper classes and methods specifically designed for common procedural generation tasks, including advanced noise generation algorithms.
+
+```java
+import com.example.modloader.api.world.ProceduralGenerationAPI;
+
+ProceduralGenerationAPI procGenAPI = api.getProceduralGenerationAPI();
+
+double noiseValue2D = procGenAPI.generatePerlinNoise(10.5, 20.3, 0.1, 4, 2.0, 0.5, 1234L);
+double noiseValue3D = procGenAPI.generateSimplexNoise(10.5, 20.3, 30.1, 0.05, 5678L);
+System.out.println("Generated 2D Perlin Noise: " + noiseValue2D);
+System.out.println("Generated 3D Simplex Noise: " + noiseValue3D);
 ```
 
 #### Custom Inventories (GUIs)
 
-Create interactive GUIs for your players. You can define click and close handlers for custom behavior.
+Construct interactive graphical user interfaces (GUIs) for your players with a highly flexible layout system. This API allows you to define custom components, arrange them precisely using various layout managers, and implement sophisticated event handling for player interactions.
 
 ```java
-// In onLoad(ModAPI api)
-CustomInventoryAPI inventoryAPI = api.getCustomInventoryAPI();
-Inventory myInventory = inventoryAPI.createInventory(27, "My Mod's GUI"); // 27 slots, custom title
+import com.example.modloader.api.gui.GUIAPI;
+import com.example.modloader.api.gui.Layout;
+import com.example.modloader.api.gui.GridLayout;
+import com.example.modloader.api.gui.GUI;
+import com.example.modloader.api.gui.SimpleButton;
+import com.example.modloader.api.gui.Label;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.Material;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 
-inventoryAPI.setItem(myInventory, 13, new ItemStack(Material.EMERALD)); // Set item in middle slot
+GUIAPI guiAPI = api.getGUIAPI();
 
-inventoryAPI.registerClickHandler(myInventory, event -> {
-    event.setCancelled(true); // Prevent players from taking items
-    if (event.getSlot() == 13) {
-        event.getWhoClicked().sendMessage("§aYou clicked the emerald! Here's a reward.");
-        event.getWhoClicked().getInventory().addItem(new ItemStack(Material.GOLD_INGOT));
-        event.getWhoClicked().closeInventory();
-    }
+// 1. Define a layout for your GUI. A GridLayout is suitable for inventory-based GUIs.
+Layout gridLayout = new GridLayout(3, 9);
+
+// 2. Create a new GUI instance with a title, size (in slots), and the defined layout.
+GUI myGUI = guiAPI.createGUI("My Mod's GUI", 27, gridLayout);
+
+// 3. Create interactive components and add them to the GUI with layout constraints.
+// Example: A simple button positioned at row 1, column 4 (the center of the middle row).
+ItemStack buttonItem = new ItemStack(Material.EMERALD);
+ItemMeta buttonMeta = buttonItem.getItemMeta();
+buttonMeta.setDisplayName("§aClick Me!");
+buttonItem.setItemMeta(buttonMeta);
+
+SimpleButton clickButton = new SimpleButton(buttonItem, player -> {
+    player.sendMessage("§aButton clicked!");
+    // Implement custom logic here, such as triggering an event or performing an action.
 });
+myGUI.addComponent(clickButton, new GridLayout.GridConstraints(1, 4));
 
-inventoryAPI.registerCloseHandler(myInventory, event -> {
-    event.getPlayer().sendMessage("§7You closed the custom GUI.");
-});
+// Example: A static label positioned at row 0, column 0.
+ItemStack labelItem = new ItemStack(Material.PAPER);
+ItemMeta labelMeta = labelItem.getItemMeta();
+labelMeta.setDisplayName("§fWelcome!");
+labelItem.setItemMeta(labelMeta);
+Label welcomeLabel = new Label(labelItem);
+myGUI.addComponent(welcomeLabel, new GridLayout.GridConstraints(0, 0));
 
-// To open this inventory for a player (e.g., when they run a command):
-// Player player = (Player) sender;
-// inventoryAPI.openInventory(player, myInventory);
+// To open this GUI for a specific player, typically in response to a command or event:
+// Player targetPlayer = (Player) sender; // Assuming 'sender' is a Player
+// guiAPI.openGUI(targetPlayer, myGUI);
+
+// Dynamic GUI Updates:
+// Components within the GUI can be updated dynamically after creation.
+// For example, to change the text of a label:
+// welcomeLabel.setItemStack(new ItemStack(Material.BOOK)); // Update the underlying ItemStack
+// myGUI.updateComponent(welcomeLabel, new GridLayout.GridConstraints(0, 0)); // Re-add to refresh the display
+
+// To remove a component from the GUI:
+// myGUI.removeComponent(clickButton);
 ```
 
 #### Custom Particles
 
-Spawn various particle effects in the world.
+Spawn a diverse range of particle effects within the game world to enhance visual feedback or create immersive environmental effects.
 
 ```java
-// In onLoad(ModAPI api)
+import org.bukkit.Particle;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.Color;
+import com.example.modloader.api.CustomParticleAPI;
+
 CustomParticleAPI particleAPI = api.getCustomParticleAPI();
 
-// Example: Spawn 10 redstone particles at a player's location
-// particleAPI.spawnParticle(player.getWorld(), Particle.REDSTONE, player.getLocation(), 10, 0.5, 0.5, 0.5, 0.1, new Particle.DustOptions(Color.RED, 1.0f));
+// Example: Spawn 10 redstone particles at a player's location with a specific color.
+Player player = Bukkit.getOnlinePlayers().iterator().next(); // Get an online player for demonstration
+if (player != null) {
+    Location particleLocation = player.getLocation();
+    particleAPI.spawnParticle(particleLocation.getWorld(), Particle.REDSTONE, particleLocation, 10, 0.5, 0.5, 0.5, 0.1, new Particle.DustOptions(Color.RED, 1.0f));
+}
 
-// Example: Spawn a burst of flames at a specific location
-// Location burstLocation = new Location(world, 100, 64, 100);
-// particleAPI.spawnParticle(burstLocation.getWorld(), Particle.FLAME, burstLocation, 50, 1.0, 1.0, 1.0, 0.05);
+// Example: Spawn a burst of flame particles at a predefined location.
+World world = Bukkit.getWorld("world"); // Assuming a world named "world" exists
+if (world != null) {
+    Location burstLocation = new Location(world, 100, 64, 100);
+    particleAPI.spawnParticle(burstLocation.getWorld(), Particle.FLAME, burstLocation, 50, 1.0, 1.0, 1.0, 0.05);
+}
 ```
 
 #### Custom Sounds
 
-Play custom sounds defined in your resource pack, or vanilla Minecraft sounds.
+Play custom sound effects, either those defined within your mod's resource pack or standard vanilla Minecraft sounds, to provide auditory feedback for in-game events.
 
 ```java
-// In onLoad(ModAPI api)
+import org.bukkit.Sound;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.SoundCategory;
+import com.example.modloader.api.CustomSoundAPI;
+
 CustomSoundAPI soundAPI = api.getCustomSoundAPI();
 
-// Example: Play a vanilla sound at a location
-// soundAPI.playSound(player.getWorld(), Sound.ENTITY_PLAYER_LEVELUP, player.getLocation(), 1.0f, 1.0f);
+// Example: Play a vanilla sound at a specific location.
+World world = Bukkit.getWorld("world");
+if (world != null) {
+    Location soundLocation = new Location(world, 100, 64, 100);
+    soundAPI.playSound(world, Sound.ENTITY_PLAYER_LEVELUP, soundLocation, 1.0f, 1.0f);
+}
 
-// Example: Play a custom sound (defined in your resource pack's sounds.json) at a location
-// soundAPI.playCustomSound(player.getWorld(), "modloader:custom_magic_spell", player.getLocation(), SoundCategory.MASTER, 1.0f, 1.0f);
+// Example: Play a custom sound defined in your resource pack's sounds.json at a location.
+// Ensure 'modloader:custom_magic_spell' is defined in your resource pack.
+if (world != null) {
+    Location customSoundLocation = new Location(world, 100, 64, 100);
+    soundAPI.playCustomSound(world, "modloader:custom_magic_spell", customSoundLocation, SoundCategory.MASTER, 1.0f, 1.0f);
+}
 ```
 
 #### Dimension Management
 
-Create, load, and unload custom worlds (dimensions).
+Gain comprehensive control over world management by creating, loading, and unloading custom worlds, effectively defining new dimensions within your server environment.
 
 ```java
-// In onLoad(ModAPI api)
+import org.bukkit.World;
+import org.bukkit.World.Environment;
+import com.example.modloader.api.DimensionAPI;
+import org.bukkit.Bukkit;
+
 DimensionAPI dimensionAPI = api.getDimensionAPI();
 
-// Create a new normal world with default generator
+// Create a new normal world with the default chunk generator.
 World newWorld = dimensionAPI.createWorld("my_new_dimension", World.Environment.NORMAL);
 if (newWorld != null) {
-    Bukkit.getLogger().info("Created new dimension: " + newWorld.getName());
+    Bukkit.getLogger().info("Successfully created new dimension: " + newWorld.getName());
 }
 
-// Create a new world with a custom chunk generator (MyFlatWorldGenerator would be defined in your mod)
-// World flatWorld = dimensionAPI.createWorld("my_flat_world", World.Environment.NORMAL, new MyFlatWorldGenerator());
-
-// Load an existing world
+// Load an existing world by its name.
 World loadedWorld = dimensionAPI.loadWorld("world_nether");
 if (loadedWorld != null) {
-    Bukkit.getLogger().info("Loaded existing world: " + loadedWorld.getName());
+    Bukkit.getLogger().info("Successfully loaded existing world: " + loadedWorld.getName());
 }
 
-// Unload a world (and save its changes)
+// Unload a world, with an option to save its changes.
 // boolean unloaded = dimensionAPI.unloadWorld("my_new_dimension", true);
+// if (unloaded) {
+//     Bukkit.getLogger().info("Successfully unloaded dimension: my_new_dimension");
+// }
 ```
 
 #### Custom Structures
 
-Load and spawn custom structures (e.g., from `.nbt` files) into your worlds.
+Facilitate the loading and spawning of custom structures, typically defined in `.nbt` files, into your game worlds. This allows for the creation of unique architectural elements or predefined landscapes.
 
 ```java
-// In onLoad(ModAPI api)
+import com.example.modloader.api.CustomStructureAPI;
+import org.bukkit.plugin.java.JavaPlugin;
+import java.io.File;
+import org.bukkit.Location;
+import org.bukkit.Bukkit;
+import java.util.Random;
+
 CustomStructureAPI structureAPI = api.getCustomStructureAPI();
 
-// 1. Load a structure from a file (e.g., an .nbt file in your mod's resources)
-// You would typically extract this file from your JAR into the plugin's data folder first.
+// 1. Load a structure from a file. The .nbt file should be extracted from your mod's JAR
+// into the plugin's data folder for accessibility.
 File structureFile = new File(JavaPlugin.getProvidingPlugin(getClass()).getDataFolder(), "structures/my_house.nbt");
-// Ensure structureFile exists and contains valid NBT data
+// Ensure 'structureFile' exists and contains valid NBT data for a Minecraft structure.
 
 boolean loaded = structureAPI.loadStructure("my_house_structure", structureFile);
 if (loaded) {
-    Bukkit.getLogger().info("Loaded custom structure: my_house_structure");
+    Bukkit.getLogger().info("Successfully loaded custom structure: my_house_structure");
 }
 
-// 2. Spawn the loaded structure at a location
-// Location spawnLoc = new Location(Bukkit.getWorld("world"), 100, 64, 100);
-// Random random = new Random();
-// boolean spawned = structureAPI.spawnStructure("my_house_structure", spawnLoc, random, 0, false, 1.0f);
-// if (spawned) {
-//     Bukkit.getLogger().info("Spawned my_house_structure at " + spawnLoc.toVector());
-// }
+// 2. Spawn the previously loaded structure at a specified location.
+World world = Bukkit.getWorld("world");
+if (world != null) {
+    Location spawnLoc = new Location(world, 100, 64, 100);
+    Random random = new Random();
+    boolean spawned = structureAPI.spawnStructure("my_house_structure", spawnLoc, random, 0, false, 1.0f);
+    if (spawned) {
+        Bukkit.getLogger().info("Spawned my_house_structure at " + spawnLoc.toVector());
+    }
+}
 ```
 
 ### Mod Configuration
 
-Your mod can include a `config.yml` file in its `src/main/resources` directory. This file will be automatically extracted to `plugins/ModLoader999/configs/<your_mod_name>/config.yml` when your mod is loaded. You can access and modify this configuration using the `ModAPI`.
+ModLoader999 provides an advanced, type-safe configuration system for your mods. This system abstracts away direct manipulation of `config.yml` files, allowing you to define configuration classes that implement the `ModConfig` interface. Fields within these classes, annotated with `@ConfigValue`, are automatically bound to corresponding values in your mod's `config.yml`.
+
+Your mod's `config.yml` file will be automatically extracted to `plugins/ModLoader999/configs/<your_mod_name>/config.yml` upon your mod's loading. Changes made to this file are live-reloaded, and your mod can be programmed to react dynamically to these configuration updates.
+
+**1. Define Your Configuration Class:**
+
+Create a class that implements `ModConfig` and define fields annotated with `@ConfigValue`. Nested classes are fully supported for organizing complex configuration structures.
 
 ```java
-// In onLoad(ModAPI api)
-YamlConfiguration config = api.getModConfig();
+package com.yourname.mod;
 
-// Get values from config
-String message = config.getString("welcome-message", "Hello from MyMod!");
-int maxItems = config.getInt("max-items", 10);
+import com.example.modloader.api.config.ConfigValue;
+import com.example.modloader.api.config.ModConfig;
 
-// Set values (will be saved automatically on server shutdown or mod disable)
-config.set("last-loaded-time", System.currentTimeMillis());
+public class MyModConfig implements ModConfig {
 
-// Example: Register a listener that uses the config
-api.registerListener(new Listener() {
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        event.getPlayer().sendMessage(message);
+    @ConfigValue("welcome-message")
+    public String welcomeMessage = "Hello from MyMod!";
+
+    @ConfigValue("settings.max-items")
+    public int maxItems = 10;
+
+    @ConfigValue
+    public boolean enableFeature = true;
+}
+```
+
+**2. Provide Your Configuration Instance:**
+
+Within your `ModInitializer` class, create a method annotated with `@ModConfigProvider`. This method should return an instance of your `ModConfig` class. ModLoader999 will invoke this method to obtain your mod's configuration instance.
+
+```java
+package com.yourname.mod;
+
+import com.example.modloader.api.ModAPI;
+import com.example.modloader.api.ModInitializer;
+import com.example.modloader.api.config.ModConfigProvider;
+import com.example.modloader.api.dependencyinjection.Binder;
+
+public class MyMod implements ModInitializer {
+
+    private MyModConfig config;
+
+    @ModConfigProvider
+    public MyModConfig provideConfig() {
+        this.config = new MyModConfig();
+        return this.config;
+    }
+
+    @Override
+    public void onLoad(ModAPI api) {
+        System.out.println("Welcome message: " + config.welcomeMessage);
+    }
+}
+```
+
+**3. Accessing and Reacting to Changes:**
+
+You can access your `ModConfig` instance directly (as demonstrated above) or retrieve it programmatically via `ModAPI.getModConfig()`. To enable your mod to react dynamically to live reloads of the `config.yml` file, you can register a `ConfigChangeListener`.
+
+```java
+import com.example.modloader.api.config.ConfigChangeListener;
+
+api.getModConfigManager().registerConfigChangeListener(api.getModId(), new ConfigChangeListener<MyModConfig>() {
+    @Override
+    public void onConfigChanged(MyModConfig newConfig) {
+        MyMod.this.config = newConfig;
+        System.out.println("Config reloaded! New welcome message: " + newConfig.welcomeMessage);
     }
 });
+
+// To retrieve the current config instance at any point during your mod's operation:
+// MyModConfig currentConfig = api.getModConfig(MyModConfig.class);
 ```
 
 ### Building Your Mod
 
-1.  **Package:** Run `mvn package` or `gradle build` in your mod's project directory.
-2.  **Rename:** Locate the generated `.jar` file in your `target/` (Maven) or `build/libs/` (Gradle) folder. Rename its extension from `.jar` to `.modloader999` (e.g., `MyAwesomeMod-1.0.0.jar` becomes `MyAwesomeMod-1.0.0.modloader999`).
-3.  **Deploy:** Place the `.modloader999` file into the `plugins/ModLoader999/Mods/` folder on your Minecraft server.
-4.  **Reload:** Restart your server or use `/modloader reload` to load your new mod.
+1.  **Package:** Execute `mvn package` (for Maven projects) or `gradle build` (for Gradle projects) within your mod's project directory. This command will compile your source code and package it into a JAR file.
+2.  **Rename:** Locate the generated `.jar` file, typically found in your `target/` (Maven) or `build/libs/` (Gradle) folder. It is crucial to rename its file extension from `.jar` to `.modloader999` (e.g., `MyAwesomeMod-1.0.0.jar` becomes `MyAwesomeMod-1.0.0.modloader999`).
+3.  **Deploy:** Transfer the renamed `.modloader999` file into the `plugins/ModLoader999/Mods/` folder situated on your Minecraft server.
+4.  **Reload:** Initiate a server restart or utilize the in-game command `/modloader reload` to load your newly deployed mod.
 
+### Hot-Reloading for Faster Development
+
+ModLoader999 provides robust support for a "soft" hot-reloading mechanism, specifically designed for individual mods. This feature significantly accelerates the development workflow by allowing for rapid iteration without the necessity of a full server restart. When you implement changes to your mod's codebase, you can leverage the `/modloader hotreload <modName>` command to swiftly update the mod within the live game environment.
+
+**How it works:**
+
+1.  **Temporary Disablement:** The specified mod is temporarily disabled, ensuring its current operations are gracefully halted.
+2.  **Class Unloading:** Its existing classes are unloaded from the Java Virtual Machine (JVM) to the extent permitted by Java's class loading mechanisms.
+3.  **Re-scanning and Reloading:** The mod's `.modloader999` JAR file is re-scanned, and its updated classes are loaded into memory.
+4.  **Re-initialization and Re-enablement:** The mod is then re-initialized and re-enabled, reflecting your latest code changes almost instantaneously.
+
+This streamlined process enables you to observe the effects of your code modifications with minimal delay, thereby substantially enhancing your development efficiency.
+
+**Usage:**
+
+After successfully compiling your mod and placing the updated `.modloader999` file into the `plugins/ModLoader999/Mods/` folder, simply execute the following command in-game:
+
+```
+/modloader hotreload MyAwesomeMod
+```
+
+Ensure you replace `MyAwesomeMod` with the actual, unique name of your mod.
+
+### Mod Marketplace and Repository
+
+ModLoader999 incorporates a foundational mod marketplace and repository system. Upon building your mod and placing it within the `Mods/` folder, ModLoader999 automatically checks for the mod's presence in its internal repository. This repository functions as a local cache, maintaining a record of available mods.
+
+**Browsing Mods:**
+
+Server owners and players can conveniently browse the comprehensive list of mods available in the repository by executing the following command:
+
+```
+/modloader browse
+```
+
+This command will present a detailed listing of all mods that have been successfully scanned and added to the repository.
+
+**Publishing Your Mod:**
+
+If your mod is not yet cataloged in the repository (e.g., it is a newly developed mod), ModLoader999 will provide a notification in the server console, indicating that you have the option to publish it. Publishing your mod involves adding its essential metadata to the local repository, thereby making it discoverable and accessible via the `/modloader browse` command.
+
+To publish your mod, execute the following command:
+
+```
+/publishmod MyAwesomeMod
+```
+
+Remember to replace `MyAwesomeMod` with the precise, unique name of your mod. This command requires the appropriate administrative permissions.
+
+### Enhanced Mod Messaging & Networking
+
+ModLoader999 delivers a robust and flexible messaging and networking API, facilitating seamless inter-mod communication within a single server instance and secure inter-server communication across a network of Minecraft servers.
+
+**Message Channels:**
+
+Mods are empowered to create and subscribe to named message channels, enabling highly organized and targeted communication. Messages can be directed to specific recipient mods or broadcast efficiently to all listening mods.
+
+```java
+import com.example.modloader.api.ModMessageAPI;
+
+// In your ModInitializer's onLoad(ModAPI api) method
+ModMessageAPI messageAPI = api.getModMessageAPI();
+
+// Register a message handler for a specific message type. The lambda defines the action to take upon receiving the message.
+messageAPI.registerMessageHandler("my_message_type", (senderModId, messageType, payload) -> {
+    System.out.println("Received message from " + senderModId + ": " + payload);
+    // Implement custom logic to process the received message
+});
+
+// Send a message to a specific target mod. The recipientModId must match the ID of the target mod.
+messageAPI.sendMessage("TargetModId", "my_message_type", "Hello from MyMod!");
+
+// Broadcast a message to all mods that have registered a handler for 'global_message_type'.
+messageAPI.broadcastMessage("global_message_type", "Server-wide announcement!");
+```
+
+**Inter-Server Communication:**
+
+Achieve secure and efficient communication between ModLoader999 instances operating on different Minecraft servers, a crucial feature for networked environments such as BungeeCord or Velocity proxies.
+
+```java
+import com.example.modloader.api.ModMessageAPI;
+
+// In your ModInitializer's onLoad(ModAPI api) method
+ModMessageAPI messageAPI = api.getModMessageAPI();
+
+// Send a message to a specific mod on a designated target server.
+// 'TargetServerName' refers to the name of the server as configured in your BungeeCord/Velocity setup.
+messageAPI.sendInterServerMessage("TargetServerName", "TargetModId", "inter_server_type", "Hello from Server A!");
+
+// Broadcast a message to all mods across all connected servers in the network.
+messageAPI.broadcastInterServerMessage("global_inter_server_type", "Global network announcement!");
+```
+
+### Integrated Asset Management & Resource Pack Generation Improvements
+
+ModLoader999 provides a sophisticated suite of tools for integrated asset management, encompassing asset overriding, dynamic asset loading, robust resource pack versioning, and the convenient organization of assets into bundles.
+
+**Asset Overrides:**
+
+Empower your mods to override assets supplied by other mods or even vanilla Minecraft resources. This functionality operates based on a priority system, where assets registered with a higher priority will seamlessly supersede those with lower priorities.
+
+```java
+import com.example.modloader.api.CustomAssetAPI;
+
+// In your ModInitializer's onLoad(ModAPI api) method
+CustomAssetAPI assetAPI = api.getCustomAssetAPI();
+
+// Register a custom texture with the default priority (0). This texture will be used unless a higher priority asset for the same ID is registered.
+assetAPI.registerTexture("my_custom_texture", "assets/mymod/textures/blocks/custom_block.png");
+
+// Register a custom texture with a higher priority (e.g., 100) to explicitly override an existing asset,
+// such as the vanilla diamond sword texture. This ensures your custom texture is displayed.
+assetAPI.registerTexture("vanilla_diamond_sword", "assets/mymod/textures/items/my_diamond_sword.png", 100);
+```
+
+**Dynamic Asset Loading:**
+
+Access staged assets and their corresponding URLs for dynamic utilization, a key feature for scenarios such as applying custom resource packs to individual players or on-the-fly asset manipulation.
+
+```java
+import com.example.modloader.api.CustomAssetAPI;
+import java.io.File;
+
+// In your ModInitializer's onLoad(ModAPI api) method
+CustomAssetAPI assetAPI = api.getCustomAssetAPI();
+
+// Retrieve the local file path of a staged asset. This file can then be used for various operations.
+File customTextureFile = assetAPI.getAssetFile("my_custom_texture");
+
+// Obtain the URL of a staged asset. This URL is relative to the root of the generated resource pack.
+// This URL is particularly useful when integrating with Bukkit's Player.setResourcePack() method,
+// allowing you to dynamically apply resource packs to players if your server is configured to serve the resource pack.
+String customTextureUrl = assetAPI.getAssetUrl("my_custom_texture");
+```
+
+**Resource Pack Versioning:**
+
+Resource packs are generated with configurable `pack_format` and `description` metadata. The SHA-1 hash of the generated resource pack is also readily available, enabling robust versioning and facilitating automatic updates for players.
+
+**Asset Bundles:**
+
+Organize and manage related assets efficiently by grouping them into logical bundles. This feature simplifies asset management and retrieval for complex mods.
+
+```java
+import com.example.modloader.api.AssetBundle;
+import com.example.modloader.api.CustomAssetAPI;
+
+// In your ModInitializer's onLoad(ModAPI api) method
+CustomAssetAPI assetAPI = api.getCustomAssetAPI();
+
+// Create a new asset bundle with a unique identifier.
+AssetBundle myBundle = assetAPI.createAssetBundle("my_item_bundle");
+myBundle.addAsset("my_custom_texture");
+myBundle.addAsset("my_custom_model");
+
+// Register the newly created asset bundle with the asset management system.
+assetAPI.registerAssetBundle(myBundle);
+
+// Retrieve an existing asset bundle by its unique identifier.
+AssetBundle retrievedBundle = assetAPI.getAssetBundle("my_item_bundle");
+if (retrievedBundle != null) {
+    System.out.println("Assets contained within the bundle: " + retrievedBundle.getAssetIds());
+}
+```
+
+---

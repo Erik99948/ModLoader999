@@ -51,7 +51,7 @@ public interface ModAPI {
 
     CustomStructureAPI getCustomStructureAPI();
 
-    org.bukkit.configuration.file.YamlConfiguration getModConfig(String modId);
+    <T extends com.example.modloader.api.config.ModConfig> T getModConfig(Class<T> configClass);
 
     ModMessageAPI getModMessageAPI();
 
@@ -62,4 +62,8 @@ public interface ModAPI {
     Permissions getPermissions();
 
     Networking getNetworking();
+
+    com.example.modloader.api.gui.GUIAPI getGUIAPI();
+
+    com.example.modloader.api.world.ProceduralGenerationAPI getProceduralGenerationAPI();
 }
