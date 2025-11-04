@@ -8,5 +8,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface ModConfigProvider {
-    String value() default "config.yml"; // Name of the config file
+    String value() default "config.yml";
 }

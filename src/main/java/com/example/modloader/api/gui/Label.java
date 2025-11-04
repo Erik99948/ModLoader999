@@ -3,7 +3,7 @@ package com.example.modloader.api.gui;
 import org.bukkit.inventory.ItemStack;
 
 public class Label implements Component {
-    private ItemStack itemStack; // Make it non-final
+    private ItemStack itemStack;
 
     public Label(ItemStack itemStack) {
         this.itemStack = itemStack;

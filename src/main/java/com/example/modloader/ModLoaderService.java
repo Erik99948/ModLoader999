@@ -3,9 +3,9 @@ package com.example.modloader;
 import com.example.modloader.api.ModAPI;
 import com.example.modloader.api.ModAPIImpl;
 import com.example.modloader.api.ModInitializer;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -16,7 +16,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.lang.reflect.Type;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -57,7 +57,6 @@ public class ModLoaderService {
     private org.bukkit.scheduler.BukkitTask messageDispatchTask;
     private final EventBus eventBus;
     private final ModAPIRegistry modAPIRegistry;
-    private final ModSecurityManager securityManager;
     private final ModRepository modRepository;
     private final Map<String, ModInfo> availableMods = new HashMap<>();
     private final List<ModInfo> loadOrder = new ArrayList<>();
@@ -65,12 +64,13 @@ public class ModLoaderService {
 
     public ModLoaderService(JavaPlugin plugin) {
         this.plugin = plugin;
-        this.eventBus = new EventBus(); // Initialize eventBus first
+        this.eventBus = new EventBus();
+
         this.itemRegistry = new CustomItemRegistry(plugin, eventBus);
         this.mobRegistry = new CustomMobRegistry(plugin, eventBus);
         this.blockRegistry = new CustomBlockRegistry(plugin, eventBus);
         this.commandRegistry = new CustomCommandRegistry(plugin);
-        this.eventListenerRegistry = new CustomEventListenerRegistry(plugin);
+        this.eventListenerRegistry = new CustomEventListenerRegistry(plugin, eventBus);
         this.recipeRegistry = new CustomRecipeRegistry(plugin);
         this.worldGeneratorRegistry = new CustomWorldGeneratorRegistry(plugin);
         this.customEnchantmentAPIImpl = new com.example.modloader.api.CustomEnchantmentAPIImpl(plugin);
@@ -83,12 +83,11 @@ public class ModLoaderService {
         this.assetManager = new AssetManager(plugin);
         this.resourceStagingDir = new File(plugin.getDataFolder(), "resource-pack-staging");
 
-        // Get pack format and description from config, with defaults
+
         int packFormat = plugin.getConfig().getInt("resource-pack.format", 34);
         String packDescription = plugin.getConfig().getString("resource-pack.description", "Dynamically generated server resources.");
         this.resourcePackGenerator = new ResourcePackGenerator(plugin, assetManager, packFormat, packDescription);
         this.modAPIRegistry = new ModAPIRegistry();
-        this.securityManager = new ModSecurityManager(plugin);
         this.modRepository = new ModRepository(plugin);
     }
 
@@ -156,38 +155,36 @@ public class ModLoaderService {
             Map<String, String> dependencies = new HashMap<>();
             List<String> softDependencies = new ArrayList<>();
             Map<String, String> customProperties = new HashMap<>();
-            String apiVersion = "1.0.0"; // Declare here
+
+
+            String apiVersion = "1.0.0";
+
 
             try (InputStream is = jarFile.getInputStream(modInfoEntry);
                  InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
-                Gson gson = new Gson();
-                JsonObject modInfoJson = gson.fromJson(reader, JsonObject.class);
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode modInfoJson = objectMapper.readTree(reader);
 
-                modId = modInfoJson.get("id").getAsString();
-                modName = modInfoJson.get("name").getAsString();
-                modVersion = modInfoJson.get("version").getAsString();
-                modAuthor = modInfoJson.get("author").getAsString();
-                modDescription = modInfoJson.has("description") ? modInfoJson.get("description").getAsString() : "";
-                mainClassName = modInfoJson.get("main").getAsString();
-                apiVersion = modInfoJson.has("apiVersion") ? modInfoJson.get("apiVersion").getAsString() : "1.0.0"; // Assign here
+                modId = modInfoJson.get("id").asText();
+                modName = modInfoJson.get("name").asText();
+                modVersion = modInfoJson.get("version").asText();
+                modAuthor = modInfoJson.get("author").asText();
+                modDescription = modInfoJson.has("description") ? modInfoJson.get("description").asText() : "";
+                mainClassName = modInfoJson.get("main").asText();
+
 
                 if (modInfoJson.has("dependencies")) {
-                    JsonObject depsObject = modInfoJson.getAsJsonObject("dependencies");
-                    Type type = new com.google.gson.reflect.TypeToken<Map<String, String>>(){}.getType();
-                    dependencies = gson.fromJson(depsObject, type);
+                    dependencies = objectMapper.convertValue(modInfoJson.get("dependencies"), new com.fasterxml.jackson.core.type.TypeReference<Map<String, String>>() {});
                 }
 
                 if (modInfoJson.has("softDependencies")) {
-                    JsonArray softDepsArray = modInfoJson.getAsJsonArray("softDependencies");
-                    for (int i = 0; i < softDepsArray.size(); i++) {
-                        softDependencies.add(softDepsArray.get(i).getAsString());
+                    for (JsonNode softDepNode : modInfoJson.get("softDependencies")) {
+                        softDependencies.add(softDepNode.asText());
                     }
                 }
 
                 if (modInfoJson.has("customProperties")) {
-                    JsonObject customPropsObject = modInfoJson.getAsJsonObject("customProperties");
-                    Type type = new com.google.gson.reflect.TypeToken<Map<String, String>>(){}.getType();
-                    customProperties = gson.fromJson(customPropsObject, type);
+                    customProperties = objectMapper.convertValue(modInfoJson.get("customProperties"), new com.fasterxml.jackson.core.type.TypeReference<Map<String, String>>() {});
                 }
             }
 
@@ -197,7 +194,7 @@ public class ModLoaderService {
             plugin.getLogger().info("Scanned mod: " + modName + " v" + modVersion + " by " + modAuthor);
 
             if (!modRepository.isModInRepository(modName)) {
-                plugin.getLogger().info("Mod '" + modName + "' is not in the public repository. To publish it, use the command: /publishmod " + modName);
+                plugin.getLogger().info("Mod '" + modName + "' is not in the public repository. To publish it, use the command: /modloader publishmod " + modName);
             }
 
             jarFile.stream().forEach(entry -> {
@@ -234,7 +231,7 @@ public class ModLoaderService {
                 continue;
             }
 
-            // Handle hard dependencies
+
             for (Map.Entry<String, String> dependency : mod.getDependencies().entrySet()) {
                 String dependencyName = dependency.getKey();
                 String requiredVersionRange = dependency.getValue();
@@ -256,12 +253,8 @@ public class ModLoaderService {
 
                 try {
                     Class<?> dependencyMainClass = dependencyMod.getClassLoader().loadClass(dependencyMod.getMainClass());
-                    com.example.modloader.api.APIVersion apiVersion = dependencyMainClass.getAnnotation(com.example.modloader.api.APIVersion.class); // Corrected line
-                    if (apiVersion != null && !apiVersion.value().equals(mod.getApiVersion())) {
-                        plugin.getLogger().severe("Mod '" + mod.getName() + "' requires API version " + mod.getApiVersion() + " of mod '" + dependencyName + "', but found API version " + apiVersion.value() + ". Marking as ERRORED.");
-                        mod.setState(ModState.ERRORED);
-                        break;
-                    }
+
+
                 } catch (ClassNotFoundException e) {
                     plugin.getLogger().severe("Could not find main class for dependency '" + dependencyName + "'. Marking as ERRORED.");
                     mod.setState(ModState.ERRORED);
@@ -274,13 +267,13 @@ public class ModLoaderService {
                 }
             }
 
-            // Handle soft dependencies
+
             if (mod.getState() != ModState.ERRORED) {
                 for (String softDependencyName : mod.getSoftDependencies()) {
                     if (availableMods.containsKey(softDependencyName)) {
-                        // If soft dependency is present, add to graph to ensure it loads first
+
                         graph.get(softDependencyName).add(mod.getName());
-                        // Do NOT increment inDegree for soft dependencies, as their absence shouldn't block loading
+
                     } else {
                         plugin.getLogger().info("Mod '" + mod.getName() + "' has a soft dependency on unknown mod '" + softDependencyName + "'. Continuing without it.");
                     }
@@ -357,7 +350,6 @@ public class ModLoaderService {
                 modInfo.setState(ModState.LOADED);
 
                 try {
-                    System.setSecurityManager(securityManager);
                     eventBus.post(new com.example.modloader.api.event.ModPreLoadEvent(modInfo));
                     modInfo.setState(ModState.INITIALIZING);
                     modConfigManager.loadModConfig(modInfo);
@@ -382,7 +374,6 @@ public class ModLoaderService {
                     e.printStackTrace();
                     modInfo.setState(ModState.ERRORED);
                 } finally {
-                    System.setSecurityManager(null);
                 }
             } else {
                 plugin.getLogger().warning("Main class " + modInfo.getMainClass() + " in mod " + modInfo.getName() + " does not implement ModInitializer. Marking as ERRORED.");
@@ -418,7 +409,6 @@ public class ModLoaderService {
                 eventBus.post(new com.example.modloader.api.event.ModPreDisableEvent(modInfo));
                 modInfo.setState(ModState.DISABLING);
                 try {
-                    System.setSecurityManager(securityManager);
                     if (modInfo.getInitializer() != null) {
                         modInfo.getInitializer().onPreDisable();
                         modInfo.getInitializer().onDisable();
@@ -439,7 +429,6 @@ public class ModLoaderService {
                     e.printStackTrace();
                     modInfo.setState(ModState.ERRORED);
                 } finally {
-                    System.setSecurityManager(null);
                 }
             }
         }
@@ -585,9 +574,8 @@ public class ModLoaderService {
                 modToLoad.setInitializer(modInitializer);
                 modToLoad.setState(ModState.LOADED);
 
-                // Mod Initialization and enabling logic moved here
+
                 try {
-                    System.setSecurityManager(securityManager);
                     eventBus.post(new com.example.modloader.api.event.ModPreLoadEvent(modToLoad));
                     modToLoad.setState(ModState.INITIALIZING);
                     modConfigManager.loadModConfig(modToLoad);
@@ -612,7 +600,6 @@ public class ModLoaderService {
                     e.printStackTrace();
                     modToLoad.setState(ModState.ERRORED);
                 } finally {
-                    System.setSecurityManager(null);
                 }
             } else {
                 plugin.getLogger().warning("Main class " + modToLoad.getMainClass() + " in mod " + modToLoad.getName() + " does not implement ModInitializer. Marking as ERRORED.");
@@ -759,7 +746,7 @@ public class ModLoaderService {
                 Class<?> mainClass = classLoader.loadClass(modInfo.getMainClass());
                 if (ModInitializer.class.isAssignableFrom(mainClass) && !mainClass.isInterface()) {
                     plugin.getLogger().info("Found ModInitializer: " + mainClass.getName() + " for mod " + modInfo.getName());
-                    Binder binder = new Binder(); // Re-initialize binder for each mod
+                    Binder binder = new Binder();
                     ModInjector injector = new ModInjector(binder, modAPIRegistry);
                     ModInitializer modInitializer = (ModInitializer) mainClass.getDeclaredConstructor().newInstance();
                     modInitializer.configure(binder);
@@ -813,13 +800,13 @@ public class ModLoaderService {
 
         plugin.getLogger().info("Attempting to hot-reload mod: " + modName);
 
-        // 1. Disable the mod
+
         disableMod(modName);
 
-        // 2. Load the mod (this will re-scan, create new classloader, and initialize)
+
         loadMod(modName);
 
-        // 3. Enable the mod
+
         enableMod(modName);
 
         plugin.getLogger().info("Mod '" + modName + "' hot-reloaded successfully!");

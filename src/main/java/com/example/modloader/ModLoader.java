@@ -22,7 +22,20 @@ public final class ModLoader extends JavaPlugin {
             }
         }
 
+        File publishedModsFolder = new File(getDataFolder(), "published_mods");
+        if (!publishedModsFolder.exists()) {
+            if (publishedModsFolder.mkdirs()) {
+                getLogger().info("Created published_mods folder at: " + publishedModsFolder.getPath());
+            } else {
+                getLogger().severe("Failed to create published_mods folder!");
+                return;
+            }
+        }
+
         saveResource("mod.policy", false);
+
+        saveDefaultConfig();
+        int webServerPort = getConfig().getInt("web-server-port", 25566);
 
         this.modLoaderService = new ModLoaderService(this);
 
@@ -33,11 +46,11 @@ public final class ModLoader extends JavaPlugin {
             return;
         }
 
-        saveDefaultConfig();
-        int webServerPort = getConfig().getInt("web-server-port", 25566);
-
-        this.webServer = new WebServer(this, this.modLoaderService, this.modLoaderService.getResourcePackGenerator().getZipFile(), webServerPort);
+        this.webServer = new WebServer(this, this.modLoaderService, this.modLoaderService.getResourcePackGenerator().getZipFile(), webServerPort, modsFolder);
         this.webServer.start();
+
+
+        getCommand("modloader").setExecutor(new ModLoaderCommandExecutor(this, this.modLoaderService, this.webServer));
 
 
     }

@@ -2,6 +2,41 @@
 
 Welcome to the official documentation for ModLoader999, a powerful PaperMC plugin that allows you to create and load custom content into your Minecraft server with ease.
 
+## Table of Contents
+
+*   [For Server Owners](#for-server-owners)
+    *   [Installation](#installation)
+    *   [Security and Permissions (`mod.policy`)](#security-and-permissions-modpolicy)
+    *   [Web-Based Management Dashboard](#web-based-management-dashboard)
+*   [For Mod Developers](#for-mod-developers)
+    *   [Project Setup](#project-setup)
+        *   [Maven](#maven)
+        *   [Gradle](#gradle)
+    *   [The `modinfo.json` File](#the-modinfojson-file)
+    *   [Dependency Injection](#dependency-injection)
+        *   [Intra-mod Dependencies](#intra-mod-dependencies)
+        *   [Inter-mod Dependencies and API Providers/Consumers](#inter-mod-dependencies-and-api-providersconsumers)
+    *   [The `ModInitializer` Class](#the-modinitializer-class)
+    *   [Registering Content: A Deep Dive](#registering-content-a-deep-dive)
+        *   [Custom Items](#custom-items)
+        *   [Custom Blocks](#custom-blocks)
+        *   [Custom Mobs](#custom-mobs)
+        *   [Custom Commands](#custom-commands)
+        *   [Event Listeners](#event-listeners)
+        *   [Custom Recipes](#custom-recipes)
+        *   [Custom Enchantments](#custom-enchantments)
+        *   [Custom Potion Effects](#custom-potion-effects)
+        *   [World Generation](#world-generation)
+        *   [Custom Inventories (GUIs)](#custom-inventories-guis)
+        *   [Custom Particles](#custom-particles)
+        *   [Custom Sounds](#custom-sounds)
+        *   [Dimension Management](#dimension-management)
+        *   [Custom Structures](#custom-structures)
+    *   [Mod Configuration](#mod-configuration)
+    *   [Building Your Mod](#building-your-mod)
+    *   [Hot-Reloading for Faster Development](#hot-reloading-for-faster-development)
+
+
 ## For Server Owners
 
 ### Installation
@@ -18,9 +53,7 @@ Welcome to the official documentation for ModLoader999, a powerful PaperMC plugi
     *   `/modloader disable <modName>`: Deactivates an enabled mod. Note that dependent mods will prevent a mod from being disabled.
     *   `/modloader load <modName>`: Loads a mod that was previously unloaded from memory.
     *   `/modloader hotreload <modName>`: Performs a hot-reload of a single mod, involving its temporary disabling, unloading, reloading, and re-enabling for rapid development iteration.
-    *   `/modloader browse`: Presents a list of all mods currently available within the ModLoader999 repository.
     *   `/modloader gui`: Opens an interactive in-game graphical user interface for comprehensive mod management.
-    *   `/publishmod <modName>`: Publishes your mod to the ModLoader999 repository if it is not already present.
     *   `/modloader unload <modName>`: Completely unloads a mod from server memory. Dependent mods will prevent a mod from being unloaded.
 
 ### Security and Permissions (`mod.policy`)
@@ -38,6 +71,14 @@ To grant a specific mod, identified as `MyTrustedMod`, read access to an externa
 ```policy
 grant codeBase "file:${user.dir}/plugins/ModLoader999/Mods/MyTrustedMod-1.0.0.modloader999" {
     permission java.io.FilePermission "/path/to/external/data/-", "read";
+};
+```
+
+To allow a mod to make outgoing HTTP connections to `example.com`, you would add:
+
+```policy
+grant codeBase "file:${user.dir}/plugins/ModLoader999/Mods/MyTrustedMod-1.0.0.modloader999" {
+    permission java.net.SocketPermission "example.com:80", "connect";
 };
 ```
 
@@ -123,7 +164,7 @@ To commence mod development, it is essential to establish a Java project using e
     ```gradle
     dependencies {
         compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
-        compileOnly 'io.github.erik99948:modloader:1.1.0'
+        compileOnly 'io.github.erik99948:modloader:3.0.0'
     }
     ```
 
@@ -297,23 +338,55 @@ public class AwesomeMod implements ModInitializer {
 
 Your mod's primary entry point must be a class that implements the `ModInitializer` interface. This interface mandates several methods that ModLoader999 invokes at distinct phases of your mod's lifecycle. The `onLoad` method serves as the central entry point for your mod, where you will typically register all of your custom content. The `ModAPI` instance provided to these lifecycle methods is uniquely scoped to your mod, ensuring that all registrations (such as commands, event listeners, etc.) are automatically associated with and managed by your mod's lifecycle.
 
-**Event Priorities and Cancellable Events:**
+**Event System with `@SubscribeEvent`:**
 
-ModLoader999's event bus system supports a comprehensive range of event priorities (`LOWEST`, `LOW`, `NORMAL`, `HIGH`, `HIGHEST`, `MONITOR`). These priorities allow you to precisely control the order in which event listeners are executed. Furthermore, many 'Pre' events (e.g., `PreRegisterBlockEvent`, `PreRegisterItemEvent`, `PreRegisterMobEvent`) are designed to be cancellable. This crucial feature provides your mod with the capability to intercept and prevent other mods' registrations or actions before they are finalized.
+ModLoader999's event system now leverages the `@SubscribeEvent` annotation for a more intuitive and flexible way to handle events. You can create any plain Java class, annotate its methods with `@SubscribeEvent`, and then register an instance of this class using `modAPI.registerEventListener()`. The event system will automatically discover and dispatch events to these annotated methods.
 
-To effectively listen to an event with a specific priority or to cancel a cancellable event, you can directly interact with the `EventBus` or register an `EventListener` configured with the desired priority.
+Event priorities (`LOWEST`, `LOW`, `NORMAL`, `HIGH`, `HIGHEST`, `MONITOR`) can be specified within the `@SubscribeEvent` annotation to control the order of execution. Many 'Pre' events (e.g., `ModPreLoadEvent`, `PreRegisterBlockEvent`, `PreRegisterItemEvent`) are cancellable, allowing your mod to intercept and prevent actions before they occur.
 
-**Example of a Cancellable Pre-Event:**
+**Example of using `@SubscribeEvent`:**
 
-This example demonstrates how to prevent the registration of a block with a specific ID.
+This example demonstrates how to listen for the `ModPreLoadEvent` and `PreRegisterBlockEvent` using the new `@SubscribeEvent` annotation.
 
 ```java
-api.getEventBus().register(PreRegisterBlockEvent.class, event -> {
-    if (event.getBlock().getId().equals("forbidden_block")) {
-        event.setCancelled(true);
-        System.out.println("Prevented registration of forbidden_block!");
+package com.yourname.mod;
+
+import com.example.modloader.api.event.ModPreLoadEvent;
+import com.example.modloader.api.event.PreRegisterBlockEvent;
+import com.example.modloader.api.event.SubscribeEvent;
+import com.example.modloader.api.event.EventPriority;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.logging.Logger;
+
+public class MyModEventListener {
+
+    private final Logger logger;
+
+    public MyModEventListener(JavaPlugin plugin) {
+        this.logger = plugin.getLogger();
     }
-}, EventPriority.HIGHEST);
+
+    @SubscribeEvent(priority = EventPriority.NORMAL)
+    public void onModPreLoad(ModPreLoadEvent event) {
+        logger.info("MyModEventListener: Mod " + event.getModInfo().getName() + " is pre-loading!");
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onPreRegisterBlock(PreRegisterBlockEvent event) {
+        if (event.getBlock().getId().equals("forbidden_block")) {
+            event.setCancelled(true);
+            logger.info("MyModEventListener: Prevented registration of forbidden_block!");
+        }
+    }
+}
+```
+
+**Registering the Event Listener:**
+
+```java
+// In your ModInitializer's onPreLoad(ModAPI api) method
+api.registerEventListener(new MyModEventListener(api.getPlugin()));
 ```
 
 The lifecycle methods are:
@@ -571,7 +644,7 @@ api.registerCommand("modhelp", new ModCommandExecutor() {
 
 #### Event Listeners
 
-Register standard Bukkit event listeners to react dynamically to a wide array of in-game events. Any class that properly implements `org.bukkit.event.Listener` can be registered. Event listeners registered via this mechanism are automatically and intelligently associated with your mod's lifecycle, guaranteeing their proper activation when your mod is enabled and their graceful unregistration when your mod is disabled or unloaded.
+ModLoader999's event system allows you to react to a wide array of in-game events, both vanilla Bukkit events and custom `ModEvent`s. By using the `@SubscribeEvent` annotation on methods within your listener classes, you can easily subscribe to events. These listener classes are then registered with `ModAPI.registerEventListener()`.
 
 ```java
 import org.bukkit.event.Listener;
@@ -579,21 +652,48 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.Material;
+import com.example.modloader.api.event.SubscribeEvent;
+import com.example.modloader.api.event.EventPriority;
+import com.example.modloader.api.event.ModPreLoadEvent;
+import org.bukkit.plugin.java.JavaPlugin;
+import java.util.logging.Logger;
 
-// In your ModInitializer's onLoad(ModAPI api) method
-api.registerListener(new Listener() {
+// 1. Create your event listener class. It can be a plain Java class.
+public class MyModGameListener {
+
+    private final Logger logger;
+
+    public MyModGameListener(JavaPlugin plugin) {
+        this.logger = plugin.getLogger();
+    }
+
+    // Listen for a vanilla Bukkit event
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         event.getPlayer().sendMessage("§bWelcome, " + event.getPlayer().getName() + "! This server is running a cool mod!");
     }
 
-    @EventHandler
+    // Listen for another vanilla Bukkit event
+    @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent event) {
         if (event.getBlock().getType() == Material.STONE) {
             event.getPlayer().sendMessage("§7You broke some stone!");
         }
     }
-});
+
+    // Listen for a custom ModEvent
+    @SubscribeEvent
+    public void onModPreLoad(ModPreLoadEvent event) {
+        logger.info("MyModGameListener: Mod " + event.getModInfo().getName() + " is pre-loading!");
+    }
+}
+
+// 2. Register the listener in your ModInitializer's onLoad(ModAPI api) method
+// For vanilla Bukkit Listeners, you can still use registerListener
+api.registerListener(new MyModGameListener(api.getPlugin()));
+
+// For custom ModEvents (or a mix of both), use registerEventListener
+api.registerEventListener(new MyModGameListener(api.getPlugin()));
 ```
 
 #### Custom Recipes
@@ -1037,36 +1137,42 @@ if (world != null) {
 
 ### Mod Configuration
 
-ModLoader999 provides an advanced, type-safe configuration system for your mods. This system abstracts away direct manipulation of `config.yml` files, allowing you to define configuration classes that implement the `ModConfig` interface. Fields within these classes, annotated with `@ConfigValue`, are automatically bound to corresponding values in your mod's `config.yml`.
+ModLoader999 provides an advanced, type-safe configuration system for your mods. This system abstracts away direct manipulation of `config.yml` files, allowing you to define configuration classes that implement the `ModConfig` interface. Fields within these classes, annotated with `@ConfigProperty`, are automatically bound to corresponding values in your mod's `config.yml`.
 
 Your mod's `config.yml` file will be automatically extracted to `plugins/ModLoader999/configs/<your_mod_name>/config.yml` upon your mod's loading. Changes made to this file are live-reloaded, and your mod can be programmed to react dynamically to these configuration updates.
 
 **1. Define Your Configuration Class:**
 
-Create a class that implements `ModConfig` and define fields annotated with `@ConfigValue`. Nested classes are fully supported for organizing complex configuration structures.
+Create a class that implements `ModConfig` and define fields annotated with `@ConfigProperty`. Nested classes are fully supported for organizing complex configuration structures. The `@ConfigProperty` annotation offers powerful features like default values, validation (min/max, regex patterns, allowed values), and descriptions for documentation.
 
 ```java
 package com.yourname.mod;
 
-import com.example.modloader.api.config.ConfigValue;
+import com.example.modloader.api.config.ConfigProperty;
 import com.example.modloader.api.config.ModConfig;
 
 public class MyModConfig implements ModConfig {
 
-    @ConfigValue("welcome-message")
+    @ConfigProperty(path = "general.welcomeMessage", defaultValue = "Hello from MyMod!", description = "Message displayed to players on join.")
     public String welcomeMessage = "Hello from MyMod!";
 
-    @ConfigValue("settings.max-items")
+    @ConfigProperty(path = "general.maxItems", defaultValue = "10", minValue = 1, maxValue = 100, description = "Maximum number of items allowed.")
     public int maxItems = 10;
 
-    @ConfigValue
+    @ConfigProperty(path = "features.enableFeature", defaultValue = "true", description = "Enable or disable a specific feature.")
     public boolean enableFeature = true;
+
+    @ConfigProperty(path = "difficulty", allowedValues = {"EASY", "NORMAL", "HARD"}, defaultValue = "NORMAL", description = "Mod difficulty setting.")
+    public String difficulty = "NORMAL";
+
+    @ConfigProperty(path = "contact.adminEmail", defaultValue = "admin@example.com", pattern = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$", description = "Admin email for notifications.")
+    public String adminEmail = "admin@example.com";
 }
 ```
 
 **2. Provide Your Configuration Instance:**
 
-Within your `ModInitializer` class, create a method annotated with `@ModConfigProvider`. This method should return an instance of your `ModConfig` class. ModLoader999 will invoke this method to obtain your mod's configuration instance.
+Within your `ModInitializer` class, create a method annotated with `@ModConfigProvider`. This method should return an instance of your `ModConfig` class. ModLoader999 will invoke this method to obtain your mod's configuration instance. You can then retrieve the configured instance using `modAPI.getModConfig()`.
 
 ```java
 package com.yourname.mod;
@@ -1081,15 +1187,22 @@ public class MyMod implements ModInitializer {
     private MyModConfig config;
 
     @ModConfigProvider
-    public MyModConfig provideConfig() {
-        this.config = new MyModConfig();
-        return this.config;
+    public static MyModConfig provideConfig() {
+        return new MyModConfig();
     }
 
     @Override
-    public void onLoad(ModAPI api) {
-        System.out.println("Welcome message: " + config.welcomeMessage);
+    public void configure(Binder binder) {
     }
+
+    @Override
+    public void onPreLoad(ModAPI api) {
+        this.config = api.getModConfig(MyModConfig.class);
+        System.out.println("Welcome message from config: " + config.welcomeMessage);
+        System.out.println("Max items from config: " + config.maxItems);
+    }
+
+    // ... other lifecycle methods
 }
 ```
 
@@ -1100,11 +1213,13 @@ You can access your `ModConfig` instance directly (as demonstrated above) or ret
 ```java
 import com.example.modloader.api.config.ConfigChangeListener;
 
+// In your ModInitializer's onPreLoad(ModAPI api) method or similar
 api.getModConfigManager().registerConfigChangeListener(api.getModId(), new ConfigChangeListener<MyModConfig>() {
     @Override
     public void onConfigChanged(MyModConfig newConfig) {
         MyMod.this.config = newConfig;
         System.out.println("Config reloaded! New welcome message: " + newConfig.welcomeMessage);
+        // Apply new config settings to your mod's active components
     }
 });
 
@@ -1142,147 +1257,6 @@ After successfully compiling your mod and placing the updated `.modloader999` fi
 
 Ensure you replace `MyAwesomeMod` with the actual, unique name of your mod.
 
-### Mod Marketplace and Repository
 
-ModLoader999 incorporates a foundational mod marketplace and repository system. Upon building your mod and placing it within the `Mods/` folder, ModLoader999 automatically checks for the mod's presence in its internal repository. This repository functions as a local cache, maintaining a record of available mods.
-
-**Browsing Mods:**
-
-Server owners and players can conveniently browse the comprehensive list of mods available in the repository by executing the following command:
-
-```
-/modloader browse
-```
-
-This command will present a detailed listing of all mods that have been successfully scanned and added to the repository.
-
-**Publishing Your Mod:**
-
-If your mod is not yet cataloged in the repository (e.g., it is a newly developed mod), ModLoader999 will provide a notification in the server console, indicating that you have the option to publish it. Publishing your mod involves adding its essential metadata to the local repository, thereby making it discoverable and accessible via the `/modloader browse` command.
-
-To publish your mod, execute the following command:
-
-```
-/publishmod MyAwesomeMod
-```
-
-Remember to replace `MyAwesomeMod` with the precise, unique name of your mod. This command requires the appropriate administrative permissions.
-
-### Enhanced Mod Messaging & Networking
-
-ModLoader999 delivers a robust and flexible messaging and networking API, facilitating seamless inter-mod communication within a single server instance and secure inter-server communication across a network of Minecraft servers.
-
-**Message Channels:**
-
-Mods are empowered to create and subscribe to named message channels, enabling highly organized and targeted communication. Messages can be directed to specific recipient mods or broadcast efficiently to all listening mods.
-
-```java
-import com.example.modloader.api.ModMessageAPI;
-
-// In your ModInitializer's onLoad(ModAPI api) method
-ModMessageAPI messageAPI = api.getModMessageAPI();
-
-// Register a message handler for a specific message type. The lambda defines the action to take upon receiving the message.
-messageAPI.registerMessageHandler("my_message_type", (senderModId, messageType, payload) -> {
-    System.out.println("Received message from " + senderModId + ": " + payload);
-    // Implement custom logic to process the received message
-});
-
-// Send a message to a specific target mod. The recipientModId must match the ID of the target mod.
-messageAPI.sendMessage("TargetModId", "my_message_type", "Hello from MyMod!");
-
-// Broadcast a message to all mods that have registered a handler for 'global_message_type'.
-messageAPI.broadcastMessage("global_message_type", "Server-wide announcement!");
-```
-
-**Inter-Server Communication:**
-
-Achieve secure and efficient communication between ModLoader999 instances operating on different Minecraft servers, a crucial feature for networked environments such as BungeeCord or Velocity proxies.
-
-```java
-import com.example.modloader.api.ModMessageAPI;
-
-// In your ModInitializer's onLoad(ModAPI api) method
-ModMessageAPI messageAPI = api.getModMessageAPI();
-
-// Send a message to a specific mod on a designated target server.
-// 'TargetServerName' refers to the name of the server as configured in your BungeeCord/Velocity setup.
-messageAPI.sendInterServerMessage("TargetServerName", "TargetModId", "inter_server_type", "Hello from Server A!");
-
-// Broadcast a message to all mods across all connected servers in the network.
-messageAPI.broadcastInterServerMessage("global_inter_server_type", "Global network announcement!");
-```
-
-### Integrated Asset Management & Resource Pack Generation Improvements
-
-ModLoader999 provides a sophisticated suite of tools for integrated asset management, encompassing asset overriding, dynamic asset loading, robust resource pack versioning, and the convenient organization of assets into bundles.
-
-**Asset Overrides:**
-
-Empower your mods to override assets supplied by other mods or even vanilla Minecraft resources. This functionality operates based on a priority system, where assets registered with a higher priority will seamlessly supersede those with lower priorities.
-
-```java
-import com.example.modloader.api.CustomAssetAPI;
-
-// In your ModInitializer's onLoad(ModAPI api) method
-CustomAssetAPI assetAPI = api.getCustomAssetAPI();
-
-// Register a custom texture with the default priority (0). This texture will be used unless a higher priority asset for the same ID is registered.
-assetAPI.registerTexture("my_custom_texture", "assets/mymod/textures/blocks/custom_block.png");
-
-// Register a custom texture with a higher priority (e.g., 100) to explicitly override an existing asset,
-// such as the vanilla diamond sword texture. This ensures your custom texture is displayed.
-assetAPI.registerTexture("vanilla_diamond_sword", "assets/mymod/textures/items/my_diamond_sword.png", 100);
-```
-
-**Dynamic Asset Loading:**
-
-Access staged assets and their corresponding URLs for dynamic utilization, a key feature for scenarios such as applying custom resource packs to individual players or on-the-fly asset manipulation.
-
-```java
-import com.example.modloader.api.CustomAssetAPI;
-import java.io.File;
-
-// In your ModInitializer's onLoad(ModAPI api) method
-CustomAssetAPI assetAPI = api.getCustomAssetAPI();
-
-// Retrieve the local file path of a staged asset. This file can then be used for various operations.
-File customTextureFile = assetAPI.getAssetFile("my_custom_texture");
-
-// Obtain the URL of a staged asset. This URL is relative to the root of the generated resource pack.
-// This URL is particularly useful when integrating with Bukkit's Player.setResourcePack() method,
-// allowing you to dynamically apply resource packs to players if your server is configured to serve the resource pack.
-String customTextureUrl = assetAPI.getAssetUrl("my_custom_texture");
-```
-
-**Resource Pack Versioning:**
-
-Resource packs are generated with configurable `pack_format` and `description` metadata. The SHA-1 hash of the generated resource pack is also readily available, enabling robust versioning and facilitating automatic updates for players.
-
-**Asset Bundles:**
-
-Organize and manage related assets efficiently by grouping them into logical bundles. This feature simplifies asset management and retrieval for complex mods.
-
-```java
-import com.example.modloader.api.AssetBundle;
-import com.example.modloader.api.CustomAssetAPI;
-
-// In your ModInitializer's onLoad(ModAPI api) method
-CustomAssetAPI assetAPI = api.getCustomAssetAPI();
-
-// Create a new asset bundle with a unique identifier.
-AssetBundle myBundle = assetAPI.createAssetBundle("my_item_bundle");
-myBundle.addAsset("my_custom_texture");
-myBundle.addAsset("my_custom_model");
-
-// Register the newly created asset bundle with the asset management system.
-assetAPI.registerAssetBundle(myBundle);
-
-// Retrieve an existing asset bundle by its unique identifier.
-AssetBundle retrievedBundle = assetAPI.getAssetBundle("my_item_bundle");
-if (retrievedBundle != null) {
-    System.out.println("Assets contained within the bundle: " + retrievedBundle.getAssetIds());
-}
-```
 
 ---

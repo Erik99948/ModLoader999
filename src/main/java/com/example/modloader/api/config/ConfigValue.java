@@ -8,5 +8,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface ConfigValue {
-    String value() default ""; // Optional path for nested values
+    String value() default "";
 }

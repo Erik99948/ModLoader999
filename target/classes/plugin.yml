@@ -8,7 +8,7 @@ description: A universal content engine for PaperMC.
 commands:
   modloader:
     description: ModLoader999 management commands.
-    usage: /<command> [list|reload|enable|disable|help]
+    usage: /<command> [list|reload|enable|disable|load|unload|hotreload|gui|marketplace|help]
     permission: modloader.admin
     permission-message: You do not have permission to use this command.
 
@@ -25,3 +25,6 @@ permissions:
   modloader.disable:
     description: Allows disabling of ModLoader999 mods.
     default: op
+  modloader.marketplace:
+    description: Allows access to the ModLoader999 marketplace.
+    default: true

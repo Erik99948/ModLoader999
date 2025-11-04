@@ -19,6 +19,8 @@ public interface ModAPI {
 
     void registerListener(org.bukkit.event.Listener listener);
 
+    void registerEventListener(Object listenerObject);
+
     void registerRecipe(org.bukkit.inventory.Recipe recipe);
 
     void registerWorldPopulator(CustomWorldPopulator populator, String[] worldNames, org.bukkit.block.Biome... biomes);
@@ -53,6 +55,8 @@ public interface ModAPI {
 
     <T extends com.example.modloader.api.config.ModConfig> T getModConfig(Class<T> configClass);
 
+    <T extends com.example.modloader.api.config.ModConfig> T getModConfig(String modId, Class<T> configClass);
+
     ModMessageAPI getModMessageAPI();
 
     CustomAssetAPI getCustomAssetAPI();
@@ -66,4 +70,6 @@ public interface ModAPI {
     com.example.modloader.api.gui.GUIAPI getGUIAPI();
 
     com.example.modloader.api.world.ProceduralGenerationAPI getProceduralGenerationAPI();
+
+    org.bukkit.plugin.java.JavaPlugin getPlugin();
 }

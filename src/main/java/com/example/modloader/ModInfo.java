@@ -18,8 +18,8 @@ public class ModInfo {
     private List<String> softDependencies;
     private Map<String, String> customProperties;
     private File modFile;
-    private URLClassLoader classLoader;
-    private ModInitializer initializer;
+    private transient URLClassLoader classLoader;
+    private transient ModInitializer initializer;
     private ModState state;
     private String apiVersion;
 
@@ -38,7 +38,7 @@ public class ModInfo {
         this.state = ModState.UNLOADED;
     }
 
-    // Getters and setters
+
     public String getId() {
         return id;
     }

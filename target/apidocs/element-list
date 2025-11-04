@@ -9,5 +9,6 @@ com.example.modloader.api.mob
 com.example.modloader.api.network
 com.example.modloader.api.permissions
 com.example.modloader.api.world
+com.example.modloader.config
 com.example.modloader.gui
 com.example.modloader.mob

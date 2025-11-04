@@ -10,6 +10,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.URLClassLoader;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +33,10 @@ public class ModRepository {
             return;
         }
         try (FileReader reader = new FileReader(repositoryFile)) {
-            Gson gson = new Gson();
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(File.class, new FileAdapter())
+                    .registerTypeAdapter(URLClassLoader.class, new URLClassLoaderAdapter())
+                    .create();
             Type type = new TypeToken<List<ModInfo>>() {}.getType();
             mods = gson.fromJson(reader, type);
         } catch (IOException e) {
@@ -42,7 +47,11 @@ public class ModRepository {
 
     private void save() {
         try (FileWriter writer = new FileWriter(repositoryFile)) {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .registerTypeAdapter(File.class, new FileAdapter())
+                    .registerTypeAdapter(URLClassLoader.class, new URLClassLoaderAdapter())
+                    .create();
             gson.toJson(mods, writer);
         } catch (IOException e) {
             plugin.getLogger().severe("Could not save mod repository: " + e.getMessage());

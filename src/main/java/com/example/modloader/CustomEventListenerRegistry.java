@@ -1,5 +1,6 @@
 package com.example.modloader;
 
+import com.example.modloader.api.event.EventBus;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
@@ -16,32 +17,41 @@ public class CustomEventListenerRegistry {
     private final Plugin plugin;
     private final Logger logger;
     private final PluginManager pluginManager;
-    private final Map<Listener, String> registeredListenerMods = new HashMap<>();
-    private final List<Listener> registeredListeners = new ArrayList<>();
+    private final EventBus eventBus;
+    private final Map<Object, String> registeredListenerMods = new HashMap<>();
+    private final List<Object> registeredListeners = new ArrayList<>();
 
-    public CustomEventListenerRegistry(Plugin plugin) {
+    public CustomEventListenerRegistry(Plugin plugin, EventBus eventBus) {
         this.plugin = plugin;
         this.logger = plugin.getLogger();
         this.pluginManager = plugin.getServer().getPluginManager();
+        this.eventBus = eventBus;
     }
 
-    public void register(Listener listener, String modId) {
-        pluginManager.registerEvents(listener, plugin);
+    public void register(Object listener, String modId) {
+        if (listener instanceof Listener) {
+            pluginManager.registerEvents((Listener) listener, plugin);
+        }
+        eventBus.register(listener);
+
         registeredListeners.add(listener);
         registeredListenerMods.put(listener, modId);
         logger.info("Registered custom event listener: " + listener.getClass().getName() + " by mod " + modId);
     }
 
     public void unregisterAll(String modId) {
-        List<Listener> listenersToRemove = new ArrayList<>();
-        for (Map.Entry<Listener, String> entry : registeredListenerMods.entrySet()) {
+        List<Object> listenersToRemove = new ArrayList<>();
+        for (Map.Entry<Object, String> entry : registeredListenerMods.entrySet()) {
             if (entry.getValue().equals(modId)) {
                 listenersToRemove.add(entry.getKey());
             }
         }
 
-        for (Listener listener : listenersToRemove) {
-            HandlerList.unregisterAll(listener);
+        for (Object listener : listenersToRemove) {
+            if (listener instanceof Listener) {
+                HandlerList.unregisterAll((Listener) listener);
+            }
+            eventBus.unregister(listener);
             registeredListeners.remove(listener);
             registeredListenerMods.remove(listener);
             logger.info("Unregistered custom event listener: " + listener.getClass().getName() + " from mod " + modId);
@@ -49,8 +59,11 @@ public class CustomEventListenerRegistry {
     }
 
     public void unregisterAll() {
-        for (Listener listener : new ArrayList<>(registeredListeners)) {
-            HandlerList.unregisterAll(listener);
+        for (Object listener : new ArrayList<>(registeredListeners)) {
+            if (listener instanceof Listener) {
+                HandlerList.unregisterAll((Listener) listener);
+            }
+            eventBus.unregister(listener);
             logger.info("Unregistered custom event listener: " + listener.getClass().getName());
         }
         registeredListeners.clear();

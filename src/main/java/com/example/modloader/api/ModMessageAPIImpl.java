@@ -33,8 +33,8 @@ public class ModMessageAPIImpl implements ModMessageAPI {
     @Override
     public void sendMessage(String recipientModId, String messageType, String payload) {
         MessagePacket packet = new MessagePacket(senderModId, recipientModId, messageType, payload);
-        // For now, sending to all online players. In a real scenario, you'd target specific players
-        // or use BungeeCord/Velocity forwarding for inter-server communication.
+
+
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             networking.sendPacket(player, messageChannel, packet);
         }
@@ -100,12 +100,11 @@ public class ModMessageAPIImpl implements ModMessageAPI {
     }
 
     private void handleNetworkPacket(MessagePacket packet) {
-        // Only process messages intended for this modloader instance or broadcast messages
         if (packet.getRecipientModId() == null || packet.getRecipientModId().equals(senderModId)) {
             List<HandlerEntry> handlers = messageHandlers.get(packet.getMessageType());
             if (handlers != null) {
-                // Filter handlers to only those registered by the current modloader instance
-                // or if the packet is a broadcast (recipientModId is null)
+
+
                 List<HandlerEntry> relevantHandlers = handlers.stream()
                         .filter(entry -> packet.getRecipientModId() == null || entry.modId.equals(packet.getRecipientModId()))
                         .collect(Collectors.toList());

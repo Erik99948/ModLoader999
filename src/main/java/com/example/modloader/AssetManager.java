@@ -26,11 +26,20 @@ public class AssetManager {
         }
     }
 
-    public void registerAsset(String modId, String assetId, String filePathInJar, String assetTypeFolder, URLClassLoader modClassLoader) {
-        registerAsset(modId, assetId, filePathInJar, assetTypeFolder, modClassLoader, 0);
+    public void registerAsset(String modId, String assetId, String assetPathInJar, URLClassLoader modClassLoader) {
+        registerAsset(modId, assetId, assetPathInJar, modClassLoader, 0);
     }
 
-    public void registerAsset(String modId, String assetId, String filePathInJar, String assetTypeFolder, URLClassLoader modClassLoader, int priority) {
+    public void registerAsset(String modId, String assetId, String assetPathInJar, URLClassLoader modClassLoader, int priority) {
+        String assetTypeFolder = getAssetTypeFolder(assetPathInJar);
+        if (assetTypeFolder == null) {
+            plugin.getLogger().warning("Mod " + modId + ": Could not determine asset type for '" + assetPathInJar + "'. Skipping asset '" + assetId + "'.");
+            return;
+        }
+        registerAssetInternal(modId, assetId, assetPathInJar, assetTypeFolder, modClassLoader, priority);
+    }
+
+    private void registerAssetInternal(String modId, String assetId, String filePathInJar, String assetTypeFolder, URLClassLoader modClassLoader, int priority) {
         if (stagedAssets.containsKey(assetId)) {
             StagedAssetInfo existingAsset = stagedAssets.get(assetId);
             if (priority < existingAsset.priority) {
@@ -72,6 +81,35 @@ public class AssetManager {
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Mod " + modId + ": Failed to stage asset '" + assetId + "' from '" + filePathInJar + "'.", e);
         }
+    }
+
+    private String getAssetTypeFolder(String filePathInJar) {
+        if (filePathInJar.startsWith("assets/")) {
+            String pathWithoutPrefix = filePathInJar.substring("assets/".length());
+            int firstSlash = pathWithoutPrefix.indexOf('/');
+            if (firstSlash != -1) {
+                return pathWithoutPrefix.substring(0, firstSlash);
+            }
+        }
+
+        String extension = getFileExtension(filePathInJar);
+        if (extension.equalsIgnoreCase("png") || extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("gif")) {
+            return "textures";
+        } else if (extension.equalsIgnoreCase("json")) {
+
+            return "models";
+        } else if (extension.equalsIgnoreCase("ogg")) {
+            return "sounds";
+        }
+        return null; // Unknown asset type
+    }
+
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex == -1) {
+            return "";
+        }
+        return fileName.substring(dotIndex + 1);
     }
 
     public Map<String, File> getAllStagedAssets() {

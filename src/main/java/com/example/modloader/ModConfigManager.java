@@ -1,24 +1,33 @@
 package com.example.modloader;
 
-import com.example.modloader.api.config.ConfigChangeListener;
-import com.example.modloader.api.config.ConfigValue;
-import com.example.modloader.api.config.ModConfig;
-import com.example.modloader.api.config.ModConfigProvider;
-import org.bukkit.configuration.file.YamlConfiguration;
+import com.example.modloader.config.ConfigurationSource;
+import com.example.modloader.config.YamlConfigurationSource;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
+
+import com.example.modloader.api.config.ConfigChangeListener;
+import com.example.modloader.api.config.ConfigProperty;
+import com.example.modloader.api.config.ModConfig;
+import com.example.modloader.api.config.ModConfigProvider;
 
 public class ModConfigManager {
 
@@ -30,17 +39,27 @@ public class ModConfigManager {
     private final Map<String, Long> lastModifiedTimes = new ConcurrentHashMap<>();
     private BukkitRunnable configWatcherTask;
 
+    private final ConfigurationSource configSource;
+
     public ModConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
         this.configFolder = new File(plugin.getDataFolder(), "configs");
         if (!this.configFolder.exists()) {
             this.configFolder.mkdirs();
         }
+        this.configSource = new YamlConfigurationSource();
         startConfigWatcher();
     }
 
     public <T extends ModConfig> T getModConfig(String modId, Class<T> configClass) {
-        return configClass.cast(modConfigs.get(modId));
+        plugin.getLogger().info("Attempting to retrieve config for modId: " + modId);
+        ModConfig config = modConfigs.get(modId);
+        if (config == null) {
+            plugin.getLogger().warning("Config for modId: " + modId + " not found in modConfigs map.");
+        } else {
+            plugin.getLogger().info("Config for modId: " + modId + " found. Type: " + config.getClass().getName());
+        }
+        return configClass.cast(config);
     }
 
     public <T extends ModConfig> void registerConfigChangeListener(String modId, ConfigChangeListener<T> listener) {
@@ -48,14 +67,14 @@ public class ModConfigManager {
     }
 
     public void loadModConfig(ModInfo modInfo) {
-        File modConfigDir = new File(configFolder, modInfo.getName());
+        File modConfigDir = new File(configFolder, modInfo.getId());
         if (!modConfigDir.exists()) {
             modConfigDir.mkdirs();
         }
         File modConfigFile = new File(modConfigDir, "config.yml");
-        modConfigFiles.put(modInfo.getName(), modConfigFile);
+        modConfigFiles.put(modInfo.getId(), modConfigFile);
 
-        // Extract default config.yml if it doesn't exist
+
         if (!modConfigFile.exists()) {
             try (InputStream defaultConfigFileStream = modInfo.getClassLoader().getResourceAsStream("config.yml")) {
                 if (defaultConfigFileStream != null) {
@@ -75,72 +94,151 @@ public class ModConfigManager {
             }
         }
 
-        // Load YamlConfiguration
-        YamlConfiguration yamlConfig = new YamlConfiguration();
+
+        JsonNode rootNode = null;
         if (modConfigFile.exists()) {
-            try {
-                yamlConfig.load(modConfigFile);
-            } catch (Exception e) {
-                plugin.getLogger().log(Level.SEVERE, "Failed to load YAML config for mod: " + modInfo.getName(), e);
+            try (InputStream is = new java.io.FileInputStream(modConfigFile)) {
+                rootNode = configSource.load(is);
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Failed to load config file for mod: " + modInfo.getName(), e);
                 return;
             }
         }
 
-        // Find ModConfigProvider method in ModInitializer
+
         try {
             ModConfig modConfigInstance = null;
+            plugin.getLogger().info("Searching for @ModConfigProvider in mod: " + modInfo.getName());
             for (Method method : modInfo.getInitializer().getClass().getMethods()) {
                 if (method.isAnnotationPresent(ModConfigProvider.class) && ModConfig.class.isAssignableFrom(method.getReturnType())) {
-                    modConfigInstance = (ModConfig) method.invoke(modInfo.getInitializer());
+                    plugin.getLogger().info("Found @ModConfigProvider method: " + method.getName() + " in mod: " + modInfo.getName());
+                    if (java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
+
+                        plugin.getLogger().info("Invoked static @ModConfigProvider method for mod: " + modInfo.getName());
+                    } else {
+
+                        plugin.getLogger().info("Invoked instance @ModConfigProvider method for mod: " + modInfo.getName());
+                    }
                     break;
                 }
             }
 
             if (modConfigInstance != null) {
-                // Populate ModConfig instance from YamlConfiguration
-                loadConfigFromYaml(modConfigInstance, yamlConfig);
-                modConfigs.put(modInfo.getName(), modConfigInstance);
-                lastModifiedTimes.put(modInfo.getName(), modConfigFile.lastModified());
+                plugin.getLogger().info("ModConfig instance created for mod: " + modInfo.getName());
+
+                loadConfigFromJsonNode(modConfigInstance, rootNode);
+                modConfigs.put(modInfo.getId(), modConfigInstance);
+                plugin.getLogger().info("Config for modId: " + modInfo.getId() + " successfully added to modConfigs map.");
+                lastModifiedTimes.put(modInfo.getId(), modConfigFile.lastModified());
                 plugin.getLogger().info("Loaded type-safe config for mod: " + modInfo.getName());
             } else {
-                plugin.getLogger().info("Mod " + modInfo.getName() + " does not provide a type-safe config. Using raw YAML.");
-                // Fallback to storing raw YamlConfiguration if no type-safe config is provided
-                // This part needs adjustment if we strictly enforce type-safe configs
+                plugin.getLogger().warning("Mod " + modInfo.getName() + " does not provide a type-safe config. Using raw YAML.");
+
+
             }
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to process type-safe config for mod: " + modInfo.getName(), e);
         }
     }
 
-    private void loadConfigFromYaml(ModConfig configInstance, YamlConfiguration yamlConfig) throws IllegalAccessException {
+    private void loadConfigFromJsonNode(ModConfig configInstance, JsonNode jsonNode) throws IllegalAccessException {
+        if (jsonNode == null) {
+            return;
+        }
         for (Field field : configInstance.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(ConfigValue.class)) {
+            if (field.isAnnotationPresent(ConfigProperty.class)) {
                 field.setAccessible(true);
-                String path = field.getAnnotation(ConfigValue.class).value();
+                ConfigProperty configProperty = field.getAnnotation(ConfigProperty.class);
+                String path = configProperty.path();
                 if (path.isEmpty()) {
                     path = field.getName();
                 }
 
-                if (yamlConfig.contains(path)) {
-                    Object value = yamlConfig.get(path);
-                    // Basic type conversion (can be expanded)
-                    if (field.getType().isInstance(value)) {
-                        field.set(configInstance, value);
-                    } else if (field.getType() == String.class) {
-                        field.set(configInstance, String.valueOf(value));
-                    } else if (field.getType() == int.class || field.getType() == Integer.class) {
-                        field.set(configInstance, yamlConfig.getInt(path));
-                    } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-                        field.set(configInstance, yamlConfig.getBoolean(path));
-                    } else if (field.getType() == double.class || field.getType() == Double.class) {
-                        field.set(configInstance, yamlConfig.getDouble(path));
-                    } else if (field.getType() == long.class || field.getType() == Long.class) {
-                        field.set(configInstance, yamlConfig.getLong(path));
-                    } else {
-                        plugin.getLogger().warning("Unsupported config type for field '" + field.getName() + "' in mod config.");
+                JsonNode valueNode = jsonNode.get(path);
+
+
+                if (configProperty.required() && valueNode == null && configProperty.defaultValue().isEmpty()) {
+                    plugin.getLogger().warning("Required config property '" + path + "' for mod config is missing and no default value is provided.");
+                    continue;
+                }
+
+
+                if (valueNode == null || valueNode.isNull()) {
+                    if (!configProperty.defaultValue().isEmpty()) {
+
+                        try {
+                            Object defaultValue = parseDefaultValue(configProperty.defaultValue(), field.getType());
+                            field.set(configInstance, defaultValue);
+                            plugin.getLogger().info("Using default value for '" + path + "': " + configProperty.defaultValue());
+                        } catch (IllegalArgumentException | ClassCastException e) {
+                            plugin.getLogger().log(Level.WARNING, "Failed to parse default value '" + configProperty.defaultValue() + "' for field '" + field.getName() + "'.", e);
+                        }
                     }
+                    continue;
+                }
+
+
+                try {
+                    if (field.getType() == String.class) {
+                        String value = valueNode.asText();
+
+                        if (!configProperty.pattern().isEmpty() && !value.matches(configProperty.pattern())) {
+                            plugin.getLogger().warning("Config property '" + path + "' does not match required pattern: " + configProperty.pattern());
+                            continue;
+                        }
+
+                        if (configProperty.allowedValues().length > 0 && !java.util.Arrays.asList(configProperty.allowedValues()).contains(value)) {
+                            plugin.getLogger().warning("Config property '" + path + "' has an invalid value. Allowed values: " + java.util.Arrays.toString(configProperty.allowedValues()));
+                            continue;
+                        }
+                        field.set(configInstance, value);
+                    } else if (field.getType() == int.class || field.getType() == Integer.class) {
+                        int value = valueNode.asInt();
+                        if (value < configProperty.minValue() || value > configProperty.maxValue()) {
+                            plugin.getLogger().warning("Config property '" + path + "' is out of range. Min: " + configProperty.minValue() + ", Max: " + configProperty.maxValue());
+                            continue;
+                        }
+                        field.set(configInstance, value);
+                    } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                        field.set(configInstance, valueNode.asBoolean());
+                    } else if (field.getType() == double.class || field.getType() == Double.class) {
+                        double value = valueNode.asDouble();
+                        if (value < configProperty.minValue() || value > configProperty.maxValue()) {
+                            plugin.getLogger().warning("Config property '" + path + "' is out of range. Min: " + configProperty.minValue() + ", Max: " + configProperty.maxValue());
+                            continue;
+                        }
+                        field.set(configInstance, value);
+                    } else if (field.getType() == long.class || field.getType() == Long.class) {
+                        long value = valueNode.asLong();
+                        if (value < configProperty.minValue() || value > configProperty.maxValue()) {
+                            plugin.getLogger().warning("Config property '" + path + "' is out of range. Min: " + configProperty.minValue() + ", Max: " + configProperty.maxValue());
+                            continue;
+                        }
+                        field.set(configInstance, value);
+                    } else {
+                        plugin.getLogger().warning("Unsupported config type for field '" + field.getName() + "' in mod config. Path: " + path);
+                    }
+                } catch (Exception e) {
+                    plugin.getLogger().log(Level.WARNING, "Error setting config property '" + path + "' for field '" + field.getName() + "'.", e);
                 }
             }
+        }
+    }
+
+
+    private Object parseDefaultValue(String defaultValue, Class<?> type) {
+        if (type == String.class) {
+            return defaultValue;
+        } else if (type == int.class || type == Integer.class) {
+            return Integer.parseInt(defaultValue);
+        } else if (type == boolean.class || type == Boolean.class) {
+            return Boolean.parseBoolean(defaultValue);
+        } else if (type == double.class || type == Double.class) {
+            return Double.parseDouble(defaultValue);
+        } else if (type == long.class || type == Long.class) {
+            return Long.parseLong(defaultValue);
+        } else {
+            throw new IllegalArgumentException("Unsupported type for default value parsing: " + type.getName());
         }
     }
 
@@ -152,11 +250,12 @@ public class ModConfigManager {
                 plugin.getLogger().warning("Config file not found for mod: " + modId + ". Cannot save.");
                 return;
             }
-            YamlConfiguration yamlConfig = new YamlConfiguration();
-            saveConfigToYaml(configInstance, yamlConfig);
-            try {
-                yamlConfig.save(modConfigFile);
-                lastModifiedTimes.put(modId, modConfigFile.lastModified()); // Update timestamp after saving
+            ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+            ObjectNode rootNode = objectMapper.createObjectNode();
+            saveConfigToJsonNode(configInstance, rootNode);
+            try (OutputStream os = new java.io.FileOutputStream(modConfigFile)) {
+                configSource.save(rootNode, os);
+                lastModifiedTimes.put(modId, modConfigFile.lastModified());
                 plugin.getLogger().info("Saved type-safe config for mod: " + modId);
             } catch (IOException e) {
                 plugin.getLogger().log(Level.SEVERE, "Failed to save type-safe config for mod: " + modId, e);
@@ -172,25 +271,32 @@ public class ModConfigManager {
         plugin.getLogger().info("Unloaded config for mod: " + modId);
     }
 
-    private void saveConfigToYaml(ModConfig configInstance, YamlConfiguration yamlConfig) {
+    private void saveConfigToJsonNode(ModConfig configInstance, ObjectNode objectNode) {
         for (Field field : configInstance.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(ConfigValue.class)) {
+            if (field.isAnnotationPresent(ConfigProperty.class)) {
                 field.setAccessible(true);
-                String path = field.getAnnotation(ConfigValue.class).value();
+                ConfigProperty configProperty = field.getAnnotation(ConfigProperty.class);
+                String path = configProperty.path();
                 if (path.isEmpty()) {
                     path = field.getName();
                 }
 
                 try {
                     Object value = field.get(configInstance);
-                    // Only save if the value is not null and is a primitive wrapper or String
-                    if (value != null && (field.getType().isPrimitive() ||
-                            value instanceof String ||
-                            value instanceof Number ||
-                            value instanceof Boolean)) {
-                        yamlConfig.set(path, value);
-                    } else if (value != null) {
-                        plugin.getLogger().warning("Unsupported config type for saving field '" + field.getName() + "'. Skipping.");
+                    if (value != null) {
+                        if (value instanceof String) {
+                            objectNode.put(path, (String) value);
+                        } else if (value instanceof Integer) {
+                            objectNode.put(path, (Integer) value);
+                        } else if (value instanceof Boolean) {
+                            objectNode.put(path, (Boolean) value);
+                        } else if (value instanceof Double) {
+                            objectNode.put(path, (Double) value);
+                        } else if (value instanceof Long) {
+                            objectNode.put(path, (Long) value);
+                        } else {
+                            plugin.getLogger().warning("Unsupported config type for saving field '" + field.getName() + "'. Skipping. Path: " + path);
+                        }
                     }
                 } catch (IllegalAccessException e) {
                     plugin.getLogger().log(Level.SEVERE, "Failed to access field '" + field.getName() + "' for saving config.", e);
@@ -210,29 +316,31 @@ public class ModConfigManager {
                     long currentLastModified = configFile.lastModified();
                     if (lastModifiedTimes.containsKey(modId) && currentLastModified > lastModifiedTimes.get(modId)) {
                         plugin.getLogger().info("Config file for mod '" + modId + "' changed. Reloading...");
-                        // Reload config
-                        YamlConfiguration yamlConfig = new YamlConfiguration();
-                        try {
-                            yamlConfig.load(configFile);
-                            ModConfig existingConfig = modConfigs.get(modId);
-                            if (existingConfig != null) {
-                                loadConfigFromYaml(existingConfig, yamlConfig);
+
+                        JsonNode rootNode = null;
+                        ModConfig existingConfig = modConfigs.get(modId);
+                        if (existingConfig != null) {
+                            try (InputStream is = new java.io.FileInputStream(configFile)) {
+                                rootNode = configSource.load(is);
+                                loadConfigFromJsonNode(existingConfig, rootNode);
                                 lastModifiedTimes.put(modId, currentLastModified);
-                                // Notify listener
+
                                 ConfigChangeListener<ModConfig> listener = configChangeListeners.get(modId);
                                 if (listener != null) {
                                     listener.onConfigChanged(existingConfig);
                                 }
                                 plugin.getLogger().info("Config for mod '" + modId + "' reloaded and listener notified.");
+                            } catch (IOException e) {
+                                plugin.getLogger().log(Level.SEVERE, "Failed to load config file for mod during hot-reload: " + modId, e);
+                            } catch (IllegalAccessException e) {
+                                plugin.getLogger().log(Level.SEVERE, "Failed to access config fields for mod during hot-reload: " + modId, e);
                             }
-                        } catch (Exception e) {
-                            plugin.getLogger().log(Level.SEVERE, "Failed to hot-reload config for mod: " + modId, e);
                         }
                     }
                 }
             }
         };
-        configWatcherTask.runTaskTimerAsynchronously(plugin, 20L * 5, 20L * 5); // Check every 5 seconds
+
     }
 
     public void stopConfigWatcher() {
@@ -260,7 +368,7 @@ public class ModConfigManager {
         if (modConfigFile != null) {
             try {
                 java.nio.file.Files.write(modConfigFile.toPath(), yamlContent.getBytes(StandardCharsets.UTF_8));
-                lastModifiedTimes.put(modId, modConfigFile.lastModified()); // Update timestamp to trigger reload
+                lastModifiedTimes.put(modId, modConfigFile.lastModified());
                 plugin.getLogger().info("Updated config.yml for mod: " + modId + ". Reload will be triggered.");
             } catch (IOException e) {
                 plugin.getLogger().log(Level.SEVERE, "Failed to write config.yml for mod: " + modId, e);

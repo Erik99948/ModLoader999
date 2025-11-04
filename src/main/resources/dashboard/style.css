@@ -14,9 +14,33 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
 h1 {
     color: #0056b3;
-    text-align: center;
+}
+
+nav button {
+    background-color: #ddd;
+    color: #333;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: 10px;
+}
+
+nav button.active {
+    background-color: #007bff;
+    color: white;
 }
 
 .mod-list {
@@ -54,7 +78,11 @@ h1 {
     color: red;
 }
 
-.mod-card button {
+.mod-card .actions {
+    margin-top: 15px;
+}
+
+.mod-card button, .download-btn {
     background-color: #007bff;
     color: white;
     border: none;
@@ -63,9 +91,11 @@ h1 {
     cursor: pointer;
     font-size: 14px;
     margin-right: 10px;
+    text-decoration: none;
+    display: inline-block;
 }
 
-.mod-card button:hover {
+.mod-card button:hover, .download-btn:hover {
     background-color: #0056b3;
 }
 
@@ -84,4 +114,25 @@ h1 {
 
 .mod-card button.reload:hover {
     background-color: #e0a800;
+}
+
+#pagination-controls {
+    text-align: center;
+    margin-top: 20px;
+}
+
+#pagination-controls button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 0 5px;
+}
+
+#pagination-controls button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }

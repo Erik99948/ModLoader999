@@ -13,7 +13,7 @@ public interface CustomBiome {
 
     Biome getBaseBiome();
 
-    // Visual properties
+
     Color getSkyColor();
     Color getFogColor();
     Color getWaterColor();
@@ -21,24 +21,24 @@ public interface CustomBiome {
     Color getGrassColor();
     Color getFoliageColor();
 
-    // Particle properties
+
     Particle getAmbientParticle();
     int getAmbientParticleCount();
     double getAmbientParticleChance();
 
-    // Sound properties
+
     Sound getAmbientSound();
     double getAmbientSoundVolume();
     double getAmbientSoundPitch();
 
-    // Temperature and Humidity
+
     float getTemperature();
     float getHumidity();
 
-    // Precipitation
+
     boolean hasPrecipitation();
 
-    // Surface Builder (more advanced, might need a separate API)
-    // BlockData getSurfaceBlock();
-    // BlockData getGroundBlock();
+
+
+
 }

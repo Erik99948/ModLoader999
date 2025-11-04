@@ -22,6 +22,7 @@ import com.example.modloader.api.world.ProceduralGenerationAPI;
 
 public class ModAPIImpl implements ModAPI {
 
+    private final JavaPlugin plugin;
     private final CustomItemRegistry itemRegistry;
     private final CustomMobRegistry mobRegistry;
     private final CustomBlockRegistry blockRegistry;
@@ -48,6 +49,7 @@ public class ModAPIImpl implements ModAPI {
     private final ProceduralGenerationAPI proceduralGenerationAPI;
 
     public ModAPIImpl(JavaPlugin plugin, CustomItemRegistry itemRegistry, CustomMobRegistry mobRegistry, CustomBlockRegistry blockRegistry, CustomCommandRegistry commandRegistry, CustomEventListenerRegistry eventListenerRegistry, CustomRecipeRegistry recipeRegistry, CustomWorldGeneratorRegistry worldGeneratorRegistry, CustomEnchantmentAPI customEnchantmentAPI, CustomPotionEffectAPI customPotionEffectAPI, CustomWorldGeneratorAPI customWorldGeneratorAPI, com.example.modloader.ModConfigManager modConfigManager, ModMessageAPI modMessageAPI, AssetManager assetManager, String modId, URLClassLoader modClassLoader, EventBus eventBus) {
+        this.plugin = plugin;
         this.itemRegistry = itemRegistry;
         this.mobRegistry = mobRegistry;
         this.blockRegistry = blockRegistry;
@@ -72,6 +74,11 @@ public class ModAPIImpl implements ModAPI {
         this.networking = new Networking(plugin);
         this.guiAPI = new com.example.modloader.api.gui.GUIAPIImpl(plugin);
         this.proceduralGenerationAPI = new com.example.modloader.api.world.ProceduralGenerationAPIImpl(plugin);
+    }
+
+    @Override
+    public JavaPlugin getPlugin() {
+        return plugin;
     }
 
     @Override
@@ -109,6 +116,11 @@ public class ModAPIImpl implements ModAPI {
     @Override
     public void registerListener(Listener listener) {
         eventListenerRegistry.register(listener, modId);
+    }
+
+    @Override
+    public void registerEventListener(Object listenerObject) {
+        eventListenerRegistry.register(listenerObject, modId);
     }
 
     @Override
@@ -198,6 +210,11 @@ public class ModAPIImpl implements ModAPI {
 
     @Override
     public <T extends com.example.modloader.api.config.ModConfig> T getModConfig(Class<T> configClass) {
+        return modConfigManager.getModConfig(modId, configClass);
+    }
+
+    @Override
+    public <T extends com.example.modloader.api.config.ModConfig> T getModConfig(String modId, Class<T> configClass) {
         return modConfigManager.getModConfig(modId, configClass);
     }
 

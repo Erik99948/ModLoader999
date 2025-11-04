@@ -28,12 +28,14 @@ public class WebServer {
     private String resourcePackUrl;
     private String dashboardUrl;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private final Marketplace marketplace;
 
-    public WebServer(JavaPlugin plugin, ModLoaderService modLoaderService, File resourcePackFile, int port) {
+    public WebServer(JavaPlugin plugin, ModLoaderService modLoaderService, File resourcePackFile, int port, File modsDir) {
         this.plugin = plugin;
         this.modLoaderService = modLoaderService;
         this.resourcePackFile = resourcePackFile;
         this.port = port;
+        this.marketplace = new Marketplace(modLoaderService.getModRepository(), modsDir);
     }
 
     public void start() {
@@ -41,10 +43,10 @@ public class WebServer {
             server = HttpServer.create(new InetSocketAddress(port), 0);
             server.setExecutor(Executors.newFixedThreadPool(4));
 
-            // Serve static dashboard files
+
             server.createContext("/", this::handleStaticFileRequest);
 
-            // API to list all mods
+
             server.createContext("/api/mods", httpExchange -> {
                 if ("GET".equals(httpExchange.getRequestMethod())) {
                     List<ModInfo> mods = modLoaderService.getLoadedModsInfo();
@@ -54,7 +56,7 @@ public class WebServer {
                 }
             });
 
-            // API to get info about a single mod
+
             server.createContext("/api/mod/", httpExchange -> {
                 String path = httpExchange.getRequestURI().getPath();
                 String[] pathParts = path.split("/");
@@ -71,7 +73,7 @@ public class WebServer {
                 }
             });
 
-            // API to enable a mod
+
             server.createContext("/api/mod/enable/", httpExchange -> {
                 if ("POST".equals(httpExchange.getRequestMethod())) {
                     String path = httpExchange.getRequestURI().getPath();
@@ -93,7 +95,7 @@ public class WebServer {
                 }
             });
 
-            // API to disable a mod
+
             server.createContext("/api/mod/disable/", httpExchange -> {
                 if ("POST".equals(httpExchange.getRequestMethod())) {
                     String path = httpExchange.getRequestURI().getPath();
@@ -115,7 +117,7 @@ public class WebServer {
                 }
             });
 
-            // API to hot-reload a mod
+
             server.createContext("/api/mod/hotreload/", httpExchange -> {
                 if ("POST".equals(httpExchange.getRequestMethod())) {
                     String path = httpExchange.getRequestURI().getPath();
@@ -137,7 +139,7 @@ public class WebServer {
                 }
             });
 
-            // API to get/set mod config
+
             server.createContext("/api/mod/config/", httpExchange -> {
                 String path = httpExchange.getRequestURI().getPath();
                 String[] pathParts = path.split("/");
@@ -174,7 +176,9 @@ public class WebServer {
                 }
             });
 
-            // Serve resource pack
+
+
+
             server.createContext("/pack.zip", httpExchange -> {
                 if (!resourcePackFile.exists()) {
                     sendErrorResponse(httpExchange, 404, "Resource Pack Not Found");
@@ -189,16 +193,9 @@ public class WebServer {
 
             server.start();
 
-            String address = plugin.getServer().getIp();
-            if (address == null || address.isEmpty() || address.equals("0.0.0.0")) {
-                address = "127.0.0.1";
-            }
+            String address = "modloadermarketplace.com";
             this.resourcePackUrl = "http://" + address + ":" + port + "/pack.zip";
             this.dashboardUrl = "http://" + address + ":" + port + "/";
-
-            plugin.getLogger().info("Web server started on port " + port);
-            plugin.getLogger().info("Resource pack is available at: " + this.resourcePackUrl);
-            plugin.getLogger().info("Web dashboard is available at: " + this.dashboardUrl);
 
         } catch (IOException e) {
             plugin.getLogger().severe("Failed to start web server on port " + port);
@@ -249,6 +246,15 @@ public class WebServer {
 
     public String getResourcePackUrl() {
         return resourcePackUrl;
+    }
+
+    public String getDashboardUrl() {
+
+        if (dashboardUrl == null || dashboardUrl.contains("127.0.0.1")) {
+            String address = "modloadermarketplace.com";
+            return "http://" + address + ":" + port + "/";
+        }
+        return dashboardUrl;
     }
 
     public void stop() {

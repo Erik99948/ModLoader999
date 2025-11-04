@@ -8,8 +8,20 @@
 </head>
 <body>
     <div class="container">
-        <h1>ModLoader999 Dashboard</h1>
-        <div id="mod-list" class="mod-list"></div>
+        <header>
+            <h1>ModLoader999 Dashboard</h1>
+            <nav>
+                <button id="my-mods-btn" class="active">My Mods</button>
+                <button id="published-mods-btn">Published Mods</button>
+            </nav>
+        </header>
+        <div id="my-mods-view">
+            <div id="mod-list" class="mod-list"></div>
+        </div>
+        <div id="marketplace-view" style="display: none;">
+            <div id="marketplace-list" class="mod-list"></div>
+            <div id="pagination-controls"></div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

@@ -2,7 +2,7 @@
 @packages
 @argfile
 -classpath
-'C:/Users/tltbl/.m2/repository/io/papermc/paper/paper-api/1.21.1-R0.1-SNAPSHOT/paper-api-1.21.1-R0.1-SNAPSHOT.jar;C:/Users/tltbl/.m2/repository/com/mojang/brigadier/1.2.9/brigadier-1.2.9.jar;C:/Users/tltbl/.m2/repository/com/google/guava/guava/32.1.2-jre/guava-32.1.2-jre.jar;C:/Users/tltbl/.m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar;C:/Users/tltbl/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar;C:/Users/tltbl/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar;C:/Users/tltbl/.m2/repository/com/google/errorprone/error_prone_annotations/2.18.0/error_prone_annotations-2.18.0.jar;C:/Users/tltbl/.m2/repository/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8.jar;C:/Users/tltbl/.m2/repository/net/md-5/bungeecord-chat/1.20-R0.2-deprecated+build.18/bungeecord-chat-1.20-R0.2-deprecated+build.18.jar;C:/Users/tltbl/.m2/repository/org/yaml/snakeyaml/2.2/snakeyaml-2.2.jar;C:/Users/tltbl/.m2/repository/org/joml/joml/1.10.5/joml-1.10.5.jar;C:/Users/tltbl/.m2/repository/com/googlecode/json-simple/json-simple/1.1.1/json-simple-1.1.1.jar;C:/Users/tltbl/.m2/repository/it/unimi/dsi/fastutil/8.5.6/fastutil-8.5.6.jar;C:/Users/tltbl/.m2/repository/org/apache/logging/log4j/log4j-api/2.17.1/log4j-api-2.17.1.jar;C:/Users/tltbl/.m2/repository/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-resolver-provider/3.9.6/maven-resolver-provider-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-model/3.9.6/maven-model-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-model-builder/3.9.6/maven-model-builder-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-artifact/3.9.6/maven-artifact-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-builder-support/3.9.6/maven-builder-support-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/eclipse/sisu/org.eclipse.sisu.inject/0.9.0.M2/org.eclipse.sisu.inject-0.9.0.M2.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-repository-metadata/3.9.6/maven-repository-metadata-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-api/1.9.18/maven-resolver-api-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-spi/1.9.18/maven-resolver-spi-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-util/1.9.18/maven-resolver-util-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-impl/1.9.18/maven-resolver-impl-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-named-locks/1.9.18/maven-resolver-named-locks-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/codehaus/plexus/plexus-utils/3.5.1/plexus-utils-3.5.1.jar;C:/Users/tltbl/.m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar;C:/Users/tltbl/.m2/repository/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-api/4.17.0/adventure-api-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-key/4.17.0/adventure-key-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/examination-api/1.3.0/examination-api-1.3.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/examination-string/1.3.0/examination-string-1.3.0.jar;C:/Users/tltbl/.m2/repository/org/jetbrains/annotations/24.1.0/annotations-24.1.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-minimessage/4.17.0/adventure-text-minimessage-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-serializer-gson/4.17.0/adventure-text-serializer-gson-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-serializer-json/4.17.0/adventure-text-serializer-json-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/option/1.0.0/option-1.0.0.jar;C:/Users/tltbl/.m2/repository/com/google/auto/service/auto-service-annotations/1.1.1/auto-service-annotations-1.1.1.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-serializer-legacy/4.17.0/adventure-text-serializer-legacy-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-serializer-plain/4.17.0/adventure-text-serializer-plain-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-logger-slf4j/4.17.0/adventure-text-logger-slf4j-4.17.0.jar;C:/Users/tltbl/.m2/repository/org/checkerframework/checker-qual/3.33.0/checker-qual-3.33.0.jar;C:/Users/tltbl/.m2/repository/org/ow2/asm/asm/9.7.1/asm-9.7.1.jar;C:/Users/tltbl/.m2/repository/org/ow2/asm/asm-commons/9.7.1/asm-commons-9.7.1.jar;C:/Users/tltbl/.m2/repository/org/ow2/asm/asm-tree/9.7.1/asm-tree-9.7.1.jar;C:/Users/tltbl/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar;C:/Users/tltbl/.m2/repository/com/github/zafarkhaja/java-semver/0.9.0/java-semver-0.9.0.jar;C:/Users/tltbl/.m2/repository/org/json/json/20231013/json-20231013.jar'
+'C:/Users/tltbl/.m2/repository/io/papermc/paper/paper-api/1.21.1-R0.1-SNAPSHOT/paper-api-1.21.1-R0.1-SNAPSHOT.jar;C:/Users/tltbl/.m2/repository/com/mojang/brigadier/1.2.9/brigadier-1.2.9.jar;C:/Users/tltbl/.m2/repository/com/google/guava/guava/32.1.2-jre/guava-32.1.2-jre.jar;C:/Users/tltbl/.m2/repository/com/google/guava/failureaccess/1.0.1/failureaccess-1.0.1.jar;C:/Users/tltbl/.m2/repository/com/google/guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar;C:/Users/tltbl/.m2/repository/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar;C:/Users/tltbl/.m2/repository/com/google/errorprone/error_prone_annotations/2.18.0/error_prone_annotations-2.18.0.jar;C:/Users/tltbl/.m2/repository/com/google/j2objc/j2objc-annotations/2.8/j2objc-annotations-2.8.jar;C:/Users/tltbl/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar;C:/Users/tltbl/.m2/repository/net/md-5/bungeecord-chat/1.20-R0.2-deprecated+build.18/bungeecord-chat-1.20-R0.2-deprecated+build.18.jar;C:/Users/tltbl/.m2/repository/org/yaml/snakeyaml/2.2/snakeyaml-2.2.jar;C:/Users/tltbl/.m2/repository/org/joml/joml/1.10.5/joml-1.10.5.jar;C:/Users/tltbl/.m2/repository/com/googlecode/json-simple/json-simple/1.1.1/json-simple-1.1.1.jar;C:/Users/tltbl/.m2/repository/it/unimi/dsi/fastutil/8.5.6/fastutil-8.5.6.jar;C:/Users/tltbl/.m2/repository/org/apache/logging/log4j/log4j-api/2.17.1/log4j-api-2.17.1.jar;C:/Users/tltbl/.m2/repository/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-resolver-provider/3.9.6/maven-resolver-provider-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-model/3.9.6/maven-model-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-model-builder/3.9.6/maven-model-builder-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-artifact/3.9.6/maven-artifact-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/apache/commons/commons-lang3/3.12.0/commons-lang3-3.12.0.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-builder-support/3.9.6/maven-builder-support-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/eclipse/sisu/org.eclipse.sisu.inject/0.9.0.M2/org.eclipse.sisu.inject-0.9.0.M2.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/maven-repository-metadata/3.9.6/maven-repository-metadata-3.9.6.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-api/1.9.18/maven-resolver-api-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-spi/1.9.18/maven-resolver-spi-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-util/1.9.18/maven-resolver-util-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-impl/1.9.18/maven-resolver-impl-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/apache/maven/resolver/maven-resolver-named-locks/1.9.18/maven-resolver-named-locks-1.9.18.jar;C:/Users/tltbl/.m2/repository/org/codehaus/plexus/plexus-utils/3.5.1/plexus-utils-3.5.1.jar;C:/Users/tltbl/.m2/repository/javax/inject/javax.inject/1/javax.inject-1.jar;C:/Users/tltbl/.m2/repository/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-api/4.17.0/adventure-api-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-key/4.17.0/adventure-key-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/examination-api/1.3.0/examination-api-1.3.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/examination-string/1.3.0/examination-string-1.3.0.jar;C:/Users/tltbl/.m2/repository/org/jetbrains/annotations/24.1.0/annotations-24.1.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-minimessage/4.17.0/adventure-text-minimessage-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-serializer-gson/4.17.0/adventure-text-serializer-gson-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-serializer-json/4.17.0/adventure-text-serializer-json-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/option/1.0.0/option-1.0.0.jar;C:/Users/tltbl/.m2/repository/com/google/auto/service/auto-service-annotations/1.1.1/auto-service-annotations-1.1.1.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-serializer-legacy/4.17.0/adventure-text-serializer-legacy-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-serializer-plain/4.17.0/adventure-text-serializer-plain-4.17.0.jar;C:/Users/tltbl/.m2/repository/net/kyori/adventure-text-logger-slf4j/4.17.0/adventure-text-logger-slf4j-4.17.0.jar;C:/Users/tltbl/.m2/repository/org/checkerframework/checker-qual/3.33.0/checker-qual-3.33.0.jar;C:/Users/tltbl/.m2/repository/org/ow2/asm/asm/9.7.1/asm-9.7.1.jar;C:/Users/tltbl/.m2/repository/org/ow2/asm/asm-commons/9.7.1/asm-commons-9.7.1.jar;C:/Users/tltbl/.m2/repository/org/ow2/asm/asm-tree/9.7.1/asm-tree-9.7.1.jar;C:/Users/tltbl/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.16.1/jackson-databind-2.16.1.jar;C:/Users/tltbl/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.16.1/jackson-annotations-2.16.1.jar;C:/Users/tltbl/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.16.1/jackson-core-2.16.1.jar;C:/Users/tltbl/.m2/repository/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.16.1/jackson-dataformat-yaml-2.16.1.jar;C:/Users/tltbl/.m2/repository/com/github/zafarkhaja/java-semver/0.9.0/java-semver-0.9.0.jar;C:/Users/tltbl/.m2/repository/org/json/json/20231013/json-20231013.jar'
 -encoding
 'UTF-8'
 -protected
@@ -23,6 +23,7 @@
 -version
 -windowtitle
 'ModLoader 3.0.0 API'
+com.example.modloader
 com.example.modloader.api
 com.example.modloader.api.block
 com.example.modloader.api.config
@@ -33,9 +34,10 @@ com.example.modloader.api.mob
 com.example.modloader.api.network
 com.example.modloader.api.permissions
 com.example.modloader.api.world
-com.example.modloader
+com.example.modloader.config
 com.example.modloader.gui
 com.example.modloader.mob
+'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/AbstractCustomOre.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/APIVersion.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/AssetBundle.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/AssetBundleImpl.java'
@@ -45,6 +47,7 @@ com.example.modloader.mob
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/block/BlockPlaceBehavior.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/block/BlockRedstoneBehavior.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/config/ConfigChangeListener.java'
+'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/config/ConfigProperty.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/config/ConfigValue.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/config/ModConfig.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/config/ModConfigProvider.java'
@@ -89,6 +92,7 @@ com.example.modloader.mob
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/event/PreRegisterBlockEvent.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/event/PreRegisterItemEvent.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/event/PreRegisterMobEvent.java'
+'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/event/SubscribeEvent.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/gui/Button.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/gui/Component.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/gui/GridLayout.java'
@@ -121,6 +125,8 @@ com.example.modloader.mob
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/world/ProceduralGenerationAPI.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/api/world/ProceduralGenerationAPIImpl.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/AssetManager.java'
+'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/config/ConfigurationSource.java'
+'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/config/YamlConfigurationSource.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomBlock.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomBlockRegistry.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomCommandRegistry.java'
@@ -130,11 +136,14 @@ com.example.modloader.mob
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomItemRegistry.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomMob.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomMobRegistry.java'
+'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomOreWorldPopulator.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomPotionEffectType.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomRecipeRegistry.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomStructureManager.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/CustomWorldGeneratorRegistry.java'
+'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/FileAdapter.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/gui/ModManagementGUI.java'
+'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/Marketplace.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/mob/CustomMobGoalExecutor.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/ModConfigManager.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/ModInfo.java'
@@ -142,10 +151,10 @@ com.example.modloader.mob
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/ModLoaderCommandExecutor.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/ModLoaderService.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/ModRepository.java'
-'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/ModSecurityManager.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/ModState.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/PlayerJoinListener.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/ResourcePackGenerator.java'
+'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/URLClassLoaderAdapter.java'
 'C:/Users/tltbl/Downloads/ModLoader999 3.0.0/src/main/java/com/example/modloader/WebServer.java'
 C:\Users\tltbl\.m2\repository\io\papermc\paper\paper-api\1.21.1-R0.1-SNAPSHOT\paper-api-1.21.1-R0.1-SNAPSHOT.jar = 1760746889831
 C:\Users\tltbl\.m2\repository\com\mojang\brigadier\1.2.9\brigadier-1.2.9.jar = 1757613960097
@@ -155,6 +164,7 @@ C:\Users\tltbl\.m2\repository\com\google\guava\listenablefuture\9999.0-empty-to-
 C:\Users\tltbl\.m2\repository\com\google\code\findbugs\jsr305\3.0.2\jsr305-3.0.2.jar = 1747427897557
 C:\Users\tltbl\.m2\repository\com\google\errorprone\error_prone_annotations\2.18.0\error_prone_annotations-2.18.0.jar = 1747442094685
 C:\Users\tltbl\.m2\repository\com\google\j2objc\j2objc-annotations\2.8\j2objc-annotations-2.8.jar = 1747442094796
+C:\Users\tltbl\.m2\repository\com\google\code\gson\gson\2.10.1\gson-2.10.1.jar = 1747442095040
 C:\Users\tltbl\.m2\repository\net\md-5\bungeecord-chat\1.20-R0.2-deprecated+build.18\bungeecord-chat-1.20-R0.2-deprecated+build.18.jar = 1757613959953
 C:\Users\tltbl\.m2\repository\org\yaml\snakeyaml\2.2\snakeyaml-2.2.jar = 1747427898672
 C:\Users\tltbl\.m2\repository\org\joml\joml\1.10.5\joml-1.10.5.jar = 1747442094864
@@ -196,29 +206,32 @@ C:\Users\tltbl\.m2\repository\org\checkerframework\checker-qual\3.33.0\checker-q
 C:\Users\tltbl\.m2\repository\org\ow2\asm\asm\9.7.1\asm-9.7.1.jar = 1747427900741
 C:\Users\tltbl\.m2\repository\org\ow2\asm\asm-commons\9.7.1\asm-commons-9.7.1.jar = 1747428062324
 C:\Users\tltbl\.m2\repository\org\ow2\asm\asm-tree\9.7.1\asm-tree-9.7.1.jar = 1747427900558
-C:\Users\tltbl\.m2\repository\com\google\code\gson\gson\2.10.1\gson-2.10.1.jar = 1747442095040
+C:\Users\tltbl\.m2\repository\com\fasterxml\jackson\core\jackson-databind\2.16.1\jackson-databind-2.16.1.jar = 1761962285893
+C:\Users\tltbl\.m2\repository\com\fasterxml\jackson\core\jackson-annotations\2.16.1\jackson-annotations-2.16.1.jar = 1761962286640
+C:\Users\tltbl\.m2\repository\com\fasterxml\jackson\core\jackson-core\2.16.1\jackson-core-2.16.1.jar = 1761962286698
+C:\Users\tltbl\.m2\repository\com\fasterxml\jackson\dataformat\jackson-dataformat-yaml\2.16.1\jackson-dataformat-yaml-2.16.1.jar = 1761962698548
 C:\Users\tltbl\.m2\repository\com\github\zafarkhaja\java-semver\0.9.0\java-semver-0.9.0.jar = 1760740515123
 C:\Users\tltbl\.m2\repository\org\json\json\20231013\json-20231013.jar = 1760884925331
 C:\Users\tltbl\Downloads\ModLoader999 3.0.0\src\main\java = 1760653263555
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\generated-sources\annotations = 1761954283347
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\allclasses-index.html = 1761954304092
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\allpackages-index.html = 1761954304154
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\copy.svg = 1761954304518
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\element-list = 1761954302049
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\help-doc.html = 1761954304503
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\index-all.html = 1761954304439
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\index.html = 1761954303920
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\link.svg = 1761954304522
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\member-search-index.js = 1761954304169
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\module-search-index.js = 1761954304157
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\overview-summary.html = 1761954304494
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\overview-tree.html = 1761954303908
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\package-search-index.js = 1761954304159
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\script.js = 1761954304516
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\search-page.js = 1761954304540
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\search.html = 1761954304455
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\search.js = 1761954304528
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\serialized-form.html = 1761954302448
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\stylesheet.css = 1761954304514
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\tag-search-index.js = 1761954304171
-C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\type-search-index.js = 1761954304161
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\generated-sources\annotations = 1762205382346
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\allclasses-index.html = 1762205444019
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\allpackages-index.html = 1762205444025
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\copy.svg = 1762205444166
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\element-list = 1762205441664
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\help-doc.html = 1762205444146
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\index-all.html = 1762205444122
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\index.html = 1762205443924
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\link.svg = 1762205444171
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\member-search-index.js = 1762205444039
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\module-search-index.js = 1762205444027
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\overview-summary.html = 1762205444132
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\overview-tree.html = 1762205443916
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\package-search-index.js = 1762205444031
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\script.js = 1762205444164
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\search-page.js = 1762205444183
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\search.html = 1762205444126
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\search.js = 1762205444178
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\serialized-form.html = 1762205442157
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\stylesheet.css = 1762205444159
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\tag-search-index.js = 1762205444043
+C:\Users\tltbl\Downloads\ModLoader999 3.0.0\target\apidocs\type-search-index.js = 1762205444035

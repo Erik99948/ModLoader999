@@ -7,6 +7,10 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,11 +23,13 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
     private final JavaPlugin plugin;
     private final ModLoaderService modLoaderService;
     private final ModRepository modRepository;
+    private final WebServer webServer;
 
-    public ModLoaderCommandExecutor(JavaPlugin plugin, ModLoaderService modLoaderService) {
+    public ModLoaderCommandExecutor(JavaPlugin plugin, ModLoaderService modLoaderService, WebServer webServer) {
         this.plugin = plugin;
         this.modLoaderService = modLoaderService;
         this.modRepository = modLoaderService.getModRepository();
+        this.webServer = webServer;
     }
 
     @Override
@@ -63,7 +69,7 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
                     sender.sendMessage(ChatColor.RED + "Usage: /modloader enable <modName>");
                     return true;
                 }
-                String modToEnable = args[1];
+        String modToEnable = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
                 sender.sendMessage(ChatColor.YELLOW + "Attempting to enable mod: " + modToEnable + "...");
                 plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
                     try {
@@ -85,7 +91,7 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
                     sender.sendMessage(ChatColor.RED + "Usage: /modloader disable <modName>");
                     return true;
                 }
-                String modToDisable = args[1];
+                String modToDisable = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
                 sender.sendMessage(ChatColor.YELLOW + "Attempting to disable mod: " + modToDisable + "...");
                 plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
                     try {
@@ -106,9 +112,6 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
                 break;
             case "hotreload":
                 handleHotReloadCommand(sender, args);
-                break;
-            case "browse":
-                handleBrowseCommand(sender);
                 break;
             case "gui":
                 handleGUICommand(sender);
@@ -250,7 +253,7 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
         if (args.length == 1) {
-            return Arrays.asList("list", "info", "reload", "enable", "disable", "unload", "load", "hotreload", "publishmod", "browse", "gui", "help").stream()
+            return Arrays.asList("list", "info", "reload", "enable", "disable", "unload", "load", "hotreload", "gui", "help").stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
         } else if (args.length == 2) {
@@ -267,44 +270,6 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
             }
         }
         return Collections.emptyList();
-    }
-
-    private void handlePublishModCommand(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("modloader.publish")) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
-            return;
-        }
-        if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Usage: /modloader publishmod <modName>");
-            return;
-        }
-        String modName = args[1];
-        ModInfo modInfo = modLoaderService.getModInfo(modName);
-        if (modInfo == null) {
-            sender.sendMessage(ChatColor.RED + "Mod '" + modName + "' not found.");
-            return;
-        }
-
-        if (modRepository.isModInRepository(modName)) {
-            sender.sendMessage(ChatColor.YELLOW + "Mod '" + modName + "' is already in the repository.");
-            return;
-        }
-
-        modRepository.addMod(modInfo);
-        sender.sendMessage(ChatColor.GREEN + "Mod '" + modName + "' has been published to the repository!");
-    }
-
-    private void handleBrowseCommand(CommandSender sender) {
-        List<ModInfo> repoMods = modRepository.getAllMods();
-        if (repoMods.isEmpty()) {
-            sender.sendMessage(ChatColor.YELLOW + "The mod repository is empty.");
-            return;
-        }
-
-        sender.sendMessage(ChatColor.GOLD + "--- Mod Repository ---");
-        for (ModInfo mod : repoMods) {
-            sender.sendMessage(ChatColor.AQUA + mod.getName() + ChatColor.GRAY + " v" + mod.getVersion() + " by " + mod.getAuthor());
-        }
     }
 
     private void handleHotReloadCommand(CommandSender sender, String[] args) {
@@ -329,4 +294,10 @@ public class ModLoaderCommandExecutor implements CommandExecutor, TabCompleter {
             }
         });
     }
+
+
+
+
+
+
 }

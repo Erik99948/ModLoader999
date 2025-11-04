@@ -7,7 +7,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.function.Consumer;
 
 public class SimpleButton implements Component {
-    private ItemStack itemStack; // Make it non-final
+    private ItemStack itemStack;
     private final Consumer<Player> action;
 
     public SimpleButton(ItemStack itemStack, Consumer<Player> action) {
@@ -26,7 +26,7 @@ public class SimpleButton implements Component {
 
     @Override
     public void handleClick(InventoryClickEvent event) {
-        event.setCancelled(true); // Prevent item from being picked up
+        event.setCancelled(true);
         if (action != null && event.getWhoClicked() instanceof Player) {
             action.accept((Player) event.getWhoClicked());
         }

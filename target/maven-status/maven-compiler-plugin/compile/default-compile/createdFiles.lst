@@ -1,5 +1,7 @@
 com\example\modloader\ModLoaderService.class
+com\example\modloader\FileAdapter.class
 com\example\modloader\ModConfigManager.class
+com\example\modloader\api\event\SubscribeEvent.class
 com\example\modloader\CustomWorldGeneratorRegistry$CustomTreeGeneratorBlockPopulator.class
 com\example\modloader\CustomMobRegistry.class
 com\example\modloader\CustomBlockRegistry.class
@@ -14,8 +16,10 @@ com\example\modloader\api\event\EventPriority.class
 com\example\modloader\api\block\BlockBreakBehavior.class
 com\example\modloader\CustomWorldGeneratorRegistry$BiomeSpecificOreGeneratorBlockPopulator.class
 com\example\modloader\api\event\Cancellable.class
+com\example\modloader\api\event\EventBus$MethodEventListener.class
 com\example\modloader\PlayerJoinListener.class
 com\example\modloader\CustomWorldGeneratorRegistry$CustomOreGeneratorBlockPopulator.class
+com\example\modloader\CustomOreWorldPopulator.class
 com\example\modloader\api\event\ModPostLoadEvent.class
 com\example\modloader\api\CustomStructureAPIImpl.class
 com\example\modloader\api\gui\GUI.class
@@ -25,6 +29,7 @@ com\example\modloader\CustomWorldGeneratorRegistry$CustomWorldPopulatorBlockPopu
 com\example\modloader\api\CustomWorldGeneratorAPIImpl.class
 com\example\modloader\api\gui\SimpleButton.class
 com\example\modloader\api\mob\CustomMobGoal.class
+com\example\modloader\api\config\ConfigProperty.class
 com\example\modloader\api\ModCommandExecutor.class
 com\example\modloader\api\ModInitializer.class
 com\example\modloader\CustomMob.class
@@ -38,10 +43,10 @@ com\example\modloader\api\event\CancellableModEvent.class
 com\example\modloader\api\AssetBundle.class
 com\example\modloader\api\dependencyinjection\ModAPIRegistry.class
 com\example\modloader\api\ModMessageAPIImpl$HandlerEntry.class
+com\example\modloader\config\YamlConfigurationSource.class
 com\example\modloader\CustomEventListenerRegistry.class
 com\example\modloader\CustomInventoryListener.class
 com\example\modloader\api\CustomSoundAPIImpl.class
-com\example\modloader\ModSecurityManager.class
 com\example\modloader\api\CustomParticleAPI.class
 com\example\modloader\CustomWorldGeneratorRegistry$CustomStructureGeneratorBlockPopulator.class
 com\example\modloader\api\world\CustomOreGenerator.class
@@ -75,6 +80,7 @@ com\example\modloader\CustomWorldGeneratorRegistry.class
 com\example\modloader\api\AssetBundleImpl.class
 com\example\modloader\api\CustomWorldPopulator.class
 com\example\modloader\CustomItemRegistry.class
+com\example\modloader\Marketplace.class
 com\example\modloader\api\dependencyinjection\ModInjector.class
 com\example\modloader\ModRepository$1.class
 com\example\modloader\api\event\ModPostDisableEvent.class
@@ -99,12 +105,16 @@ com\example\modloader\api\mob\CustomMobSpawner.class
 com\example\modloader\CustomBlock.class
 com\example\modloader\api\gui\GUIListener.class
 com\example\modloader\ResourcePackGenerator.class
+com\example\modloader\AbstractCustomOre$DefaultOreBreakBehavior.class
+com\example\modloader\AbstractCustomOre.class
+com\example\modloader\AbstractCustomOre$1.class
 com\example\modloader\ModLoader.class
 com\example\modloader\CustomPotionEffectType.class
 com\example\modloader\api\dependencyinjection\Binder$ProviderBinding.class
 com\example\modloader\WebServer.class
 com\example\modloader\api\block\BlockPlaceBehavior.class
 com\example\modloader\api\CustomEnchantmentAPI.class
+com\example\modloader\config\ConfigurationSource.class
 com\example\modloader\api\gui\GUIAPI.class
 com\example\modloader\SimpleStructure.class
 com\example\modloader\api\dependencyinjection\API.class
@@ -129,3 +139,4 @@ com\example\modloader\api\config\ModConfig.class
 com\example\modloader\AssetManager.class
 com\example\modloader\api\DimensionAPI.class
 com\example\modloader\api\world\CustomTreeGenerator.class
+com\example\modloader\URLClassLoaderAdapter.class

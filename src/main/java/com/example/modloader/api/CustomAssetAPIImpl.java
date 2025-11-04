@@ -25,32 +25,32 @@ public class CustomAssetAPIImpl implements CustomAssetAPI {
 
     @Override
     public void registerSound(String assetId, String soundFilePath) {
-        registerSound(assetId, soundFilePath, 0); // Default priority
+        registerSound(assetId, soundFilePath, 0);
     }
 
     @Override
     public void registerSound(String assetId, String soundFilePath, int priority) {
-        assetManager.registerAsset(modId, assetId, soundFilePath, "sounds", modClassLoader, priority);
+        assetManager.registerAsset(modId, assetId, soundFilePath, modClassLoader, priority);
     }
 
     @Override
     public void registerModel(String assetId, String modelFilePath) {
-        registerModel(assetId, modelFilePath, 0); // Default priority
+        registerModel(assetId, modelFilePath, 0);
     }
 
     @Override
     public void registerModel(String assetId, String modelFilePath, int priority) {
-        assetManager.registerAsset(modId, assetId, modelFilePath, "models", modClassLoader, priority);
+        assetManager.registerAsset(modId, assetId, modelFilePath, modClassLoader, priority);
     }
 
     @Override
     public void registerTexture(String assetId, String textureFilePath) {
-        registerTexture(assetId, textureFilePath, 0); // Default priority
+        registerTexture(assetId, textureFilePath, 0);
     }
 
     @Override
     public void registerTexture(String assetId, String textureFilePath, int priority) {
-        assetManager.registerAsset(modId, assetId, textureFilePath, "textures", modClassLoader, priority);
+        assetManager.registerAsset(modId, assetId, textureFilePath, modClassLoader, priority);
     }
 
     @Override
