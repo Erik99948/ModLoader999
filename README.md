@@ -135,13 +135,13 @@ To commence mod development, it is essential to establish a Java project using e
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.21.1-R0.1-SNAPSHOT</version>
+            <version>1.21-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.github.erik99948</groupId>
             <artifactId>modloader</artifactId>
-            <version>3.0.0</version>
+            <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -163,8 +163,8 @@ To commence mod development, it is essential to establish a Java project using e
 
     ```gradle
     dependencies {
-        compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
-        compileOnly 'io.github.erik99948:modloader:3.0.0'
+        compileOnly 'io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT'
+        compileOnly 'io.github.erik99948:modloader:3.1.0'
     }
     ```
 
@@ -1156,7 +1156,7 @@ The `VoiceAPI` offers the following methods:
 
 *   `startVoiceCapture()`: Initiates audio capture from the player's default microphone. Once started, the API will continuously capture audio.
 *   `stopVoiceCapture()`: Halts the audio capture process.
-*   `sendVoiceData(byte[] data, UUID targetPlayerId)`: Transmits raw audio data to a specific player identified by their UUID. The API handles the underlying network communication.
+*   `sendVoiceData(byte[] data, UUID targetPlayerId)`: Transmits raw audio data to a specific player identified by their UUID. The API handles the underlying network communication by wrapping the data in a `VoicePacket`.
 *   `onVoiceDataReceived(VoiceDataListener listener)`: Registers a `VoiceDataListener` to receive incoming voice data from other players. The listener will be invoked with the raw audio data and the UUID of the sender.
 *   `playVoiceData(byte[] data, UUID sourcePlayerId)`: Plays raw audio data through the player's default audio output device.
 
@@ -1251,7 +1251,7 @@ public class MyVoiceChatMod implements ModInitializer {
 
 **Networking Details:**
 
-The `VoiceAPI` utilizes the internal `Networking` API on the `modloader:voice` channel for transmitting and receiving audio data. This channel is configured for UDP communication to ensure low-latency real-time audio. Mod developers do not need to directly interact with this channel unless they wish to implement custom network handling for voice data.
+The `VoiceAPI` utilizes the internal `Networking` API on the `modloader:voice` channel for transmitting and receiving audio data. This channel is configured to send `VoicePacket` objects, which wrap the raw audio data. Mod developers do not need to directly interact with this channel unless they wish to implement custom network handling for voice data.
 
 **Mod Developer Responsibilities:**
 

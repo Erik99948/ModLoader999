@@ -25,9 +25,11 @@ com\example\modloader\api\CustomStructureAPIImpl.class
 com\example\modloader\api\gui\GUI.class
 com\example\modloader\api\CustomParticleAPIImpl.class
 com\example\modloader\api\event\ModPreEnableEvent.class
+com\example\modloader\api\network\VoicePacket.class
 com\example\modloader\CustomWorldGeneratorRegistry$CustomWorldPopulatorBlockPopulator.class
 com\example\modloader\api\CustomWorldGeneratorAPIImpl.class
 com\example\modloader\api\gui\SimpleButton.class
+com\example\modloader\api\VoiceDataListener.class
 com\example\modloader\api\mob\CustomMobGoal.class
 com\example\modloader\api\config\ConfigProperty.class
 com\example\modloader\api\ModCommandExecutor.class
@@ -40,6 +42,7 @@ com\example\modloader\api\dependencyinjection\Singleton.class
 com\example\modloader\api\ModAPI.class
 com\example\modloader\api\world\CustomDimension.class
 com\example\modloader\api\event\CancellableModEvent.class
+com\example\modloader\api\VoiceAPI.class
 com\example\modloader\api\AssetBundle.class
 com\example\modloader\api\dependencyinjection\ModAPIRegistry.class
 com\example\modloader\api\ModMessageAPIImpl$HandlerEntry.class
@@ -95,6 +98,7 @@ com\example\modloader\api\gui\Button.class
 com\example\modloader\api\gui\GridLayout.class
 com\example\modloader\api\ModAPIImpl.class
 com\example\modloader\api\world\CustomBiome.class
+com\example\modloader\api\VoiceAPIImpl.class
 com\example\modloader\CustomRecipeRegistry.class
 com\example\modloader\api\world\ProceduralGenerationAPI.class
 com\example\modloader\ModConfigManager$1.class

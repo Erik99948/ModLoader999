@@ -14,7 +14,7 @@ public class CustomOreWorldPopulator implements CustomWorldPopulator {
     private final BlockData oreBlockData;
     private final int minY;
     private final int maxY;
-    private final double chancePerChunk; // e.g., 0.10 for 10%
+    private final double chancePerChunk;
     private final int minVeinSize;
     private final int maxVeinSize;
 
@@ -37,7 +37,6 @@ public class CustomOreWorldPopulator implements CustomWorldPopulator {
                 int y = random.nextInt(maxY - minY + 1) + minY;
 
                 Block block = chunk.getBlock(x, y, z);
-                // Only replace stone or similar natural blocks
                 if (block.getType() == Material.STONE || block.getType() == Material.GRANITE ||
                     block.getType() == Material.DIORITE || block.getType() == Material.ANDESITE ||
                     block.getType() == Material.DEEPSLATE) {

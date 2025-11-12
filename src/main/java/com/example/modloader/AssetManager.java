@@ -101,7 +101,7 @@ public class AssetManager {
         } else if (extension.equalsIgnoreCase("ogg")) {
             return "sounds";
         }
-        return null; // Unknown asset type
+        return null;
     }
 
     private String getFileExtension(String fileName) {

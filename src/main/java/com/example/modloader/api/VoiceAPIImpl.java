@@ -2,8 +2,8 @@ package com.example.modloader.api;
 
 import com.example.modloader.api.dependencyinjection.Singleton;
 import com.example.modloader.api.network.Networking;
-import com.example.modloader.api.network.PacketHandler;
-import com.example.modloader.api.network.PacketType;
+import com.example.modloader.api.network.VoicePacket;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import javax.sound.sampled.*;
@@ -35,15 +35,13 @@ public class VoiceAPIImpl implements VoiceAPI {
         this.networking = networking;
         this.audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100.0F, 16, 1, 2, 44100.0F, false);
 
-        this.networking.registerPacketHandler(VOICE_CHANNEL, new PacketHandler() {
-            @Override
-            public void handlePacket(Player player, byte[] data) {
-                UUID sourcePlayerId = player.getUniqueId();
-                for (VoiceDataListener listener : listeners) {
-                    listener.onVoiceData(data, sourcePlayerId);
-                }
-                playVoiceData(data, sourcePlayerId);
+        this.networking.registerListener(VOICE_CHANNEL, VoicePacket.class, voicePacket -> {
+            byte[] data = voicePacket.getData();
+            UUID sourcePlayerId = voicePacket.getSenderId();
+            for (VoiceDataListener listener : listeners) {
+                listener.onVoiceData(data, sourcePlayerId);
             }
+            playVoiceData(data, sourcePlayerId);
         });
         LOGGER.info("VoiceAPI initialized with Networking integration. Voice channel: " + VOICE_CHANNEL);
     }
@@ -113,9 +111,9 @@ public class VoiceAPIImpl implements VoiceAPI {
 
     @Override
     public void sendVoiceData(byte[] data, UUID targetPlayerId) {
-        Player targetPlayer = networking.getPlayer(targetPlayerId);
+        Player targetPlayer = Bukkit.getPlayer(targetPlayerId);
         if (targetPlayer != null) {
-            networking.sendPacket(targetPlayer, VOICE_CHANNEL, data, PacketType.UDP);
+            networking.sendPacket(targetPlayer, VOICE_CHANNEL, new VoicePacket(data));
         } else {
             LOGGER.warning("Could not find target player with UUID: " + targetPlayerId + " to send voice data.");
         }

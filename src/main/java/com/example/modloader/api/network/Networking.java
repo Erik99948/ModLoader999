@@ -45,8 +45,8 @@ public class Networking implements PluginMessageListener {
             plugin.getLogger().warning("Attempted to register listener for unregistered channel: " + channelName + ". Registering channel now.");
             registerChannel(channelName);
         }
-        channelPacketListeners.computeIfAbsent(channelName, k -> new ConcurrentHashMap<>()) 
-                               .computeIfAbsent(packetType, k -> new ArrayList<>()) 
+        channelPacketListeners.computeIfAbsent(channelName, k -> new ConcurrentHashMap<>())
+                               .computeIfAbsent(packetType, k -> new ArrayList<>())
                                .add(listener);
     }
 
@@ -72,6 +72,7 @@ public class Networking implements PluginMessageListener {
             return;
         }
         try {
+            packet.setSender(player);
             ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
             ObjectOutputStream objectStream = new ObjectOutputStream(byteStream);
             objectStream.writeObject(packet);
@@ -110,13 +111,14 @@ public class Networking implements PluginMessageListener {
     public void onPluginMessageReceived(String channelName, Player player, byte[] message) {
         Map<Class<? extends Packet>, List<Consumer<? extends Packet>>> packetListeners = channelPacketListeners.get(channelName);
         if (packetListeners == null) {
-            return; // No listeners for this channel
+            return;
         }
 
         try {
             ByteArrayInputStream byteStream = new ByteArrayInputStream(message);
             ObjectInputStream objectStream = new ObjectInputStream(byteStream);
             Packet packet = (Packet) objectStream.readObject();
+            packet.setSender(player);
             List<Consumer<? extends Packet>> listeners = packetListeners.get(packet.getClass());
             if (listeners != null) {
                 for (Consumer listener : listeners) {

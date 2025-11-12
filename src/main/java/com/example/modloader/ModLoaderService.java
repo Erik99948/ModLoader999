@@ -343,7 +343,6 @@ public class ModLoaderService {
             if (ModInitializer.class.isAssignableFrom(mainClass) && !mainClass.isInterface()) {
                 plugin.getLogger().info("Found ModInitializer: " + mainClass.getName() + " for mod " + modInfo.getName());
                 Binder binder = new Binder();
-                // ModInjector injector = new ModInjector(binder, modAPIRegistry);
                 ModInitializer modInitializer = (ModInitializer) mainClass.getDeclaredConstructor().newInstance();
                 modInitializer.configure(binder);
                 binder.registerProviders(modInitializer);
