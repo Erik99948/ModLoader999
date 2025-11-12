@@ -25,27 +25,23 @@ public class VoiceAPIImpl implements VoiceAPI {
     private final List<VoiceDataListener> listeners = new CopyOnWriteArrayList<>();
 
     private AudioFormat audioFormat;
-    private TargetDataLine targetDataLine; // For capturing audio
-    private SourceDataLine sourceDataLine; // For playing audio
+    private TargetDataLine targetDataLine;
+    private SourceDataLine sourceDataLine;
 
     private Thread captureThread;
     private volatile boolean running;
 
     public VoiceAPIImpl(Networking networking) {
         this.networking = networking;
-        // Define a common audio format for voice chat
-        // PCM, 16-bit, 44.1kHz, mono, signed, little-endian
         this.audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, 44100.0F, 16, 1, 2, 44100.0F, false);
 
-        // Register packet handler for incoming voice data
         this.networking.registerPacketHandler(VOICE_CHANNEL, new PacketHandler() {
             @Override
             public void handlePacket(Player player, byte[] data) {
-                UUID sourcePlayerId = player.getUniqueId(); // Assuming the player sending the packet is the source
+                UUID sourcePlayerId = player.getUniqueId();
                 for (VoiceDataListener listener : listeners) {
                     listener.onVoiceData(data, sourcePlayerId);
                 }
-                // Automatically play received voice data
                 playVoiceData(data, sourcePlayerId);
             }
         });
@@ -71,23 +67,12 @@ public class VoiceAPIImpl implements VoiceAPI {
 
             running = true;
             captureThread = new Thread(() -> {
-                byte[] buffer = new byte[targetDataLine.getBufferSize() / 5]; // Smaller buffer for lower latency
+                byte[] buffer = new byte[targetDataLine.getBufferSize() / 5];
                 int bytesRead;
                 while (running && (bytesRead = targetDataLine.read(buffer, 0, buffer.length)) != -1) {
                     if (bytesRead > 0) {
-                        // Create a copy of the data to avoid issues with buffer reuse
                         byte[] voiceData = new byte[bytesRead];
                         System.arraycopy(buffer, 0, voiceData, 0, bytesRead);
-                        // In a real scenario, this would be sent to other players
-                        // For now, we'll just log and potentially send via networking
-                        // LOGGER.fine(String.format("Captured %d bytes of voice data.", bytesRead));
-
-                        // Send captured data over the network to all connected players (or specific ones for proximity)
-                        // The actual targetPlayerId logic would be handled by the mod using this API
-                        // For demonstration, we'll send to a dummy UUID or rely on the mod to call sendVoiceData
-                        // This part needs to be explicitly called by the mod developer using sendVoiceData(data, target)
-                        // For now, we'll just make it available to listeners if any internal processing is needed
-                        // No direct sending here, as sendVoiceData is the public API for that.
                     }
                 }
                 LOGGER.info("Voice capture thread stopped.");
@@ -116,7 +101,7 @@ public class VoiceAPIImpl implements VoiceAPI {
         }
         if (captureThread != null) {
             try {
-                captureThread.join(1000); // Wait for the thread to finish
+                captureThread.join(1000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 LOGGER.log(Level.WARNING, "Interrupted while waiting for capture thread to stop.", e);
@@ -128,13 +113,9 @@ public class VoiceAPIImpl implements VoiceAPI {
 
     @Override
     public void sendVoiceData(byte[] data, UUID targetPlayerId) {
-        // Convert UUID to Player object (this would typically be done by the mod or a utility)
-        // For now, we'll assume the Networking API can handle UUIDs or we need to find the player
-        // This is a simplification; in a real scenario, you'd get the Player object from Bukkit
-        Player targetPlayer = networking.getPlayer(targetPlayerId); // Assuming Networking has a way to get Player by UUID
+        Player targetPlayer = networking.getPlayer(targetPlayerId);
         if (targetPlayer != null) {
-            networking.sendPacket(targetPlayer, VOICE_CHANNEL, data, PacketType.UDP); // Assuming UDP for voice
-            // LOGGER.fine(String.format("Sent %d bytes of voice data to %s via %s.", data.length, targetPlayerId, VOICE_CHANNEL));
+            networking.sendPacket(targetPlayer, VOICE_CHANNEL, data, PacketType.UDP);
         } else {
             LOGGER.warning("Could not find target player with UUID: " + targetPlayerId + " to send voice data.");
         }
@@ -160,9 +141,7 @@ public class VoiceAPIImpl implements VoiceAPI {
                 sourceDataLine.start();
             }
 
-            // Play the audio data
             sourceDataLine.write(data, 0, data.length);
-            // LOGGER.fine(String.format("Played %d bytes of voice data from %s.", data.length, sourcePlayerId));
         } catch (LineUnavailableException e) {
             LOGGER.log(Level.SEVERE, "Failed to play voice data: Line unavailable.", e);
         } catch (IllegalArgumentException e) {
@@ -172,7 +151,6 @@ public class VoiceAPIImpl implements VoiceAPI {
         }
     }
 
-    // Ensure resources are cleaned up when the plugin disables
     public void shutdown() {
         stopVoiceCapture();
         if (sourceDataLine != null) {

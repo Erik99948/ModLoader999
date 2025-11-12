@@ -192,6 +192,7 @@ public class WebServer {
             });
 
             server.start();
+            plugin.getLogger().info("Web server started on port " + port);
 
             String address = "modloadermarketplace.com";
             this.resourcePackUrl = "http://" + address + ":" + port + "/pack.zip";

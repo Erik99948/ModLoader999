@@ -1135,6 +1135,135 @@ if (world != null) {
 }
 ```
 
+#### Voice Chat API
+
+ModLoader999 now provides a comprehensive Voice Chat API, enabling mod developers to implement real-time voice communication within their mods. This API abstracts away the complexities of audio capture, playback, and network transmission, allowing you to focus on game-specific logic like proximity chat, voice channels, or custom audio effects.
+
+**Accessing the VoiceAPI:**
+
+You can obtain an instance of the `VoiceAPI` through the main `ModAPI` object provided to your `ModInitializer`'s lifecycle methods.
+
+```java
+import com.example.modloader.api.VoiceAPI;
+
+// In your ModInitializer's onLoad(ModAPI api) method
+VoiceAPI voiceAPI = api.getVoiceAPI();
+```
+
+**Core Functionalities:**
+
+The `VoiceAPI` offers the following methods:
+
+*   `startVoiceCapture()`: Initiates audio capture from the player's default microphone. Once started, the API will continuously capture audio.
+*   `stopVoiceCapture()`: Halts the audio capture process.
+*   `sendVoiceData(byte[] data, UUID targetPlayerId)`: Transmits raw audio data to a specific player identified by their UUID. The API handles the underlying network communication.
+*   `onVoiceDataReceived(VoiceDataListener listener)`: Registers a `VoiceDataListener` to receive incoming voice data from other players. The listener will be invoked with the raw audio data and the UUID of the sender.
+*   `playVoiceData(byte[] data, UUID sourcePlayerId)`: Plays raw audio data through the player's default audio output device.
+
+**Example Usage:**
+
+This example demonstrates how a mod could start/stop voice capture, send captured data, and listen for incoming voice data to play it back.
+
+```java
+import com.example.modloader.api.ModAPI;
+import com.example.modloader.api.ModInitializer;
+import com.example.modloader.api.VoiceAPI;
+import com.example.modloader.api.VoiceDataListener;
+import com.example.modloader.api.ModCommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+public class MyVoiceChatMod implements ModInitializer {
+
+    private VoiceAPI voiceAPI;
+    private boolean isCapturing = false;
+
+    @Override
+    public void onLoad(ModAPI api) {
+        this.voiceAPI = api.getVoiceAPI();
+
+        // Register a command to toggle voice capture
+        api.registerCommand("vc", new ModCommandExecutor() {
+            @Override
+            public boolean onCommand(CommandSender sender, String commandLabel, String[] args) {
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage("§cOnly players can use this command.");
+                    return true;
+                }
+                Player player = (Player) sender;
+
+                if (args.length == 1 && args[0].equalsIgnoreCase("toggle")) {
+                    if (isCapturing) {
+                        voiceAPI.stopVoiceCapture();
+                        isCapturing = false;
+                        player.sendMessage("§aVoice capture stopped.");
+                    } else {
+                        voiceAPI.startVoiceCapture();
+                        isCapturing = true;
+                        player.sendMessage("§aVoice capture started. Speak now!");
+                    }
+                    return true;
+                }
+                player.sendMessage("§cUsage: /vc toggle");
+                return true;
+            }
+
+            @Override
+            public List<String> onTabComplete(CommandSender sender, String alias, String[] args) {
+                if (args.length == 1) {
+                    return Collections.singletonList("toggle");
+                }
+                return Collections.emptyList();
+            }
+        });
+
+        // Register a listener to play incoming voice data
+        voiceAPI.onVoiceDataReceived(new VoiceDataListener() {
+            @Override
+            public void onVoiceData(byte[] data, UUID sourcePlayerId) {
+                // In a real mod, you might add proximity checks here
+                // For simplicity, we'll just play all incoming data
+                voiceAPI.playVoiceData(data, sourcePlayerId);
+            }
+        });
+
+        // Optional: If you want to send captured data to specific players,
+        // you would typically do this in a separate thread or event handler
+        // that gets the captured data from the VoiceAPI (e.g., via a custom event
+        // or by extending VoiceAPIImpl to expose captured data).
+        // For this example, the VoiceAPIImpl automatically captures and makes it available
+        // to its internal network handler. Mod developers would call sendVoiceData explicitly.
+    }
+
+    @Override
+    public void onDisable() {
+        // Ensure voice capture is stopped when the mod is disabled
+        if (isCapturing) {
+            voiceAPI.stopVoiceCapture();
+            isCapturing = false;
+        }
+    }
+}
+```
+
+**Networking Details:**
+
+The `VoiceAPI` utilizes the internal `Networking` API on the `modloader:voice` channel for transmitting and receiving audio data. This channel is configured for UDP communication to ensure low-latency real-time audio. Mod developers do not need to directly interact with this channel unless they wish to implement custom network handling for voice data.
+
+**Mod Developer Responsibilities:**
+
+While the `VoiceAPI` handles the core audio and network plumbing, mod developers are responsible for:
+
+*   **Proximity Logic:** Determining which players should hear each other based on their in-game distance.
+*   **Voice Channels:** Implementing logic for players to join different voice channels.
+*   **User Interface:** Creating in-game indicators for who is speaking, volume controls, etc.
+*   **Player Management:** Mapping UUIDs to in-game players and managing their voice states.
+*   **Audio Codecs (Optional):** While the API transmits raw PCM data, mod developers could implement their own audio compression/decompression using external libraries if bandwidth is a concern, by processing the `byte[] data` before calling `sendVoiceData` and after receiving it.
+
+---
 ### Mod Configuration
 
 ModLoader999 provides an advanced, type-safe configuration system for your mods. This system abstracts away direct manipulation of `config.yml` files, allowing you to define configuration classes that implement the `ModConfig` interface. Fields within these classes, annotated with `@ConfigProperty`, are automatically bound to corresponding values in your mod's `config.yml`.

@@ -69,10 +69,6 @@ public interface ModAPI {
 
     com.example.modloader.api.gui.GUIAPI getGUIAPI();
 
-    /**
-     * Provides access to the ModLoader's Voice API, allowing mods to implement voice chat functionalities.
-     * @return An instance of {@link VoiceAPI}.
-     */
     VoiceAPI getVoiceAPI();
 
     com.example.modloader.api.world.ProceduralGenerationAPI getProceduralGenerationAPI();

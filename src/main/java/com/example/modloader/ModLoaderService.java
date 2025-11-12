@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -344,7 +343,7 @@ public class ModLoaderService {
             if (ModInitializer.class.isAssignableFrom(mainClass) && !mainClass.isInterface()) {
                 plugin.getLogger().info("Found ModInitializer: " + mainClass.getName() + " for mod " + modInfo.getName());
                 Binder binder = new Binder();
-                // ModInjector injector = new ModInjector(binder, modAPIRegistry); // Not directly used here
+                // ModInjector injector = new ModInjector(binder, modAPIRegistry);
                 ModInitializer modInitializer = (ModInitializer) mainClass.getDeclaredConstructor().newInstance();
                 modInitializer.configure(binder);
                 binder.registerProviders(modInitializer);
@@ -486,7 +485,7 @@ public class ModLoaderService {
     }
 
     public void unloadMod(String modName) throws Exception {
-        ModInfo modToUnload = getModInfo(modName);
+        ModInfo modToUnload = availableMods.get(modName);
         if (modToUnload == null) {
             throw new IllegalArgumentException("Mod '" + modName + "' not found.");
         }
@@ -568,7 +567,7 @@ public class ModLoaderService {
             Class<?> mainClass = classLoader.loadClass(modToLoad.getMainClass());
             if (ModInitializer.class.isAssignableFrom(mainClass) && !mainClass.isInterface()) {
                 plugin.getLogger().info("Found ModInitializer: " + mainClass.getName() + " for mod " + modToLoad.getName());
-                Binder binder = new Binder(); // Re-initialize binder for each mod
+                Binder binder = new Binder();
                 ModInjector injector = new ModInjector(binder, modAPIRegistry);
                 ModInitializer modInitializer = (ModInitializer) mainClass.getDeclaredConstructor().newInstance();
                 modInitializer.configure(binder);
@@ -709,18 +708,18 @@ public class ModLoaderService {
             }
         }
 
-        // Handle soft dependencies during enabling
+        
         for (String softDependencyName : modInfo.getSoftDependencies()) {
             ModInfo softDependencyMod = availableMods.get(softDependencyName);
             if (softDependencyMod == null) {
                 plugin.getLogger().info("Mod '" + modInfo.getName() + "' has a soft dependency on unknown mod '" + softDependencyName + "'. Continuing without it.");
             } else if (softDependencyMod.getState() != ModState.ENABLED) {
-                // Attempt to enable soft dependency if not already enabled
+                
                 try {
                     recursivelyEnableMod(softDependencyMod, enablingStack);
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to enable soft dependency '" + softDependencyName + "' for mod '" + modInfo.getName() + "': " + e.getMessage());
-                    // Do not re-throw, soft dependencies are optional
+                    
                 }
             }
         }
