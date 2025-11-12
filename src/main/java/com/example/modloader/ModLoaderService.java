@@ -61,6 +61,7 @@ public class ModLoaderService {
     private final Map<String, ModInfo> availableMods = new HashMap<>();
     private final List<ModInfo> loadOrder = new ArrayList<>();
     private final com.example.modloader.api.network.Networking networking;
+    private final com.example.modloader.api.VoiceAPI voiceAPI;
 
     public ModLoaderService(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -82,6 +83,7 @@ public class ModLoaderService {
         this.modConfigManager = new ModConfigManager(plugin);
         this.assetManager = new AssetManager(plugin);
         this.resourceStagingDir = new File(plugin.getDataFolder(), "resource-pack-staging");
+        this.voiceAPI = new com.example.modloader.api.VoiceAPIImpl(this.networking);
 
 
         int packFormat = plugin.getConfig().getInt("resource-pack.format", 34);
@@ -353,7 +355,7 @@ public class ModLoaderService {
                     eventBus.post(new com.example.modloader.api.event.ModPreLoadEvent(modInfo));
                     modInfo.setState(ModState.INITIALIZING);
                     modConfigManager.loadModConfig(modInfo);
-                    ModAPI modAPI = new ModAPIImpl(plugin, itemRegistry, mobRegistry, blockRegistry, commandRegistry, eventListenerRegistry, recipeRegistry, worldGeneratorRegistry, customEnchantmentAPIImpl, customPotionEffectAPIImpl, customWorldGeneratorAPIImpl, modConfigManager, modMessageAPIImpl, assetManager, modInfo.getName(), modInfo.getClassLoader(), eventBus);
+                    ModAPI modAPI = new ModAPIImpl(plugin, itemRegistry, mobRegistry, blockRegistry, commandRegistry, eventListenerRegistry, recipeRegistry, worldGeneratorRegistry, customEnchantmentAPIImpl, customPotionEffectAPIImpl, customWorldGeneratorAPIImpl, modConfigManager, modMessageAPIImpl, assetManager, modInfo.getName(), modInfo.getClassLoader(), eventBus, voiceAPI);
                     modInfo.getInitializer().onPreLoad(modAPI);
                     modInfo.getInitializer().onLoad(modAPI);
                     modInfo.getInitializer().onPostLoad(modAPI);
@@ -579,7 +581,7 @@ public class ModLoaderService {
                     eventBus.post(new com.example.modloader.api.event.ModPreLoadEvent(modToLoad));
                     modToLoad.setState(ModState.INITIALIZING);
                     modConfigManager.loadModConfig(modToLoad);
-                    ModAPI modAPI = new ModAPIImpl(plugin, itemRegistry, mobRegistry, blockRegistry, commandRegistry, eventListenerRegistry, recipeRegistry, worldGeneratorRegistry, customEnchantmentAPIImpl, customPotionEffectAPIImpl, customWorldGeneratorAPIImpl, modConfigManager, modMessageAPIImpl, assetManager, modToLoad.getName(), modToLoad.getClassLoader(), eventBus);
+                    ModAPI modAPI = new ModAPIImpl(plugin, itemRegistry, mobRegistry, blockRegistry, commandRegistry, eventListenerRegistry, recipeRegistry, worldGeneratorRegistry, customEnchantmentAPIImpl, customPotionEffectAPIImpl, customWorldGeneratorAPIImpl, modConfigManager, modMessageAPIImpl, assetManager, modToLoad.getName(), modToLoad.getClassLoader(), eventBus, voiceAPI);
                     modToLoad.getInitializer().onPreLoad(modAPI);
                     modToLoad.getInitializer().onLoad(modAPI);
                     modToLoad.getInitializer().onPostLoad(modAPI);
@@ -762,7 +764,7 @@ public class ModLoaderService {
             if (modInfo.getState() == ModState.LOADED) {
                 modInfo.setState(ModState.INITIALIZING);
                 modConfigManager.loadModConfig(modInfo);
-                ModAPI modAPI = new ModAPIImpl(plugin, itemRegistry, mobRegistry, blockRegistry, commandRegistry, eventListenerRegistry, recipeRegistry, worldGeneratorRegistry, customEnchantmentAPIImpl, customPotionEffectAPIImpl, customWorldGeneratorAPIImpl, modConfigManager, modMessageAPIImpl, assetManager, modInfo.getName(), modInfo.getClassLoader(), eventBus);
+                ModAPI modAPI = new ModAPIImpl(plugin, itemRegistry, mobRegistry, blockRegistry, commandRegistry, eventListenerRegistry, recipeRegistry, worldGeneratorRegistry, customEnchantmentAPIImpl, customPotionEffectAPIImpl, customWorldGeneratorAPIImpl, modConfigManager, modMessageAPIImpl, assetManager, modInfo.getName(), modInfo.getClassLoader(), eventBus, voiceAPI);
                 modInfo.getInitializer().onPreLoad(modAPI);
                 modInfo.getInitializer().onLoad(modAPI);
                 modInfo.getInitializer().onPostLoad(modAPI);

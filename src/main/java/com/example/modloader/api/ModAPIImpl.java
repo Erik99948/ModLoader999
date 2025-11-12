@@ -47,8 +47,9 @@ public class ModAPIImpl implements ModAPI {
     private final Networking networking;
     private final com.example.modloader.api.gui.GUIAPI guiAPI;
     private final ProceduralGenerationAPI proceduralGenerationAPI;
+    private final VoiceAPI voiceAPI;
 
-    public ModAPIImpl(JavaPlugin plugin, CustomItemRegistry itemRegistry, CustomMobRegistry mobRegistry, CustomBlockRegistry blockRegistry, CustomCommandRegistry commandRegistry, CustomEventListenerRegistry eventListenerRegistry, CustomRecipeRegistry recipeRegistry, CustomWorldGeneratorRegistry worldGeneratorRegistry, CustomEnchantmentAPI customEnchantmentAPI, CustomPotionEffectAPI customPotionEffectAPI, CustomWorldGeneratorAPI customWorldGeneratorAPI, com.example.modloader.ModConfigManager modConfigManager, ModMessageAPI modMessageAPI, AssetManager assetManager, String modId, URLClassLoader modClassLoader, EventBus eventBus) {
+    public ModAPIImpl(JavaPlugin plugin, CustomItemRegistry itemRegistry, CustomMobRegistry mobRegistry, CustomBlockRegistry blockRegistry, CustomCommandRegistry commandRegistry, CustomEventListenerRegistry eventListenerRegistry, CustomRecipeRegistry recipeRegistry, CustomWorldGeneratorRegistry worldGeneratorRegistry, CustomEnchantmentAPI customEnchantmentAPI, CustomPotionEffectAPI customPotionEffectAPI, CustomWorldGeneratorAPI customWorldGeneratorAPI, com.example.modloader.ModConfigManager modConfigManager, ModMessageAPI modMessageAPI, AssetManager assetManager, String modId, URLClassLoader modClassLoader, EventBus eventBus, VoiceAPI voiceAPI) {
         this.plugin = plugin;
         this.itemRegistry = itemRegistry;
         this.mobRegistry = mobRegistry;
@@ -74,11 +75,17 @@ public class ModAPIImpl implements ModAPI {
         this.networking = new Networking(plugin);
         this.guiAPI = new com.example.modloader.api.gui.GUIAPIImpl(plugin);
         this.proceduralGenerationAPI = new com.example.modloader.api.world.ProceduralGenerationAPIImpl(plugin);
+        this.voiceAPI = voiceAPI;
     }
 
     @Override
     public JavaPlugin getPlugin() {
         return plugin;
+    }
+
+    @Override
+    public VoiceAPI getVoiceAPI() {
+        return voiceAPI;
     }
 
     @Override
