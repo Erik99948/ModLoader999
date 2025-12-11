@@ -1,0 +1,88 @@
+{
+  "id": "testforgemod",
+  "name": "Test Forge Mod",
+  "version": "1.0.0",
+  "author": "Test Developer",
+  "description": "A comprehensive test Forge mod demonstrating conversion to ModLoader999 - includes items, blocks, entities, recipes, enchantments, and world generation features",
+  "main": "com.test.forgemod.TestForgeMod",
+  "apiVersion": "1.0.0",
+  "dependencies": {},
+  "softDependencies": [],
+  "minecraftVersion": "1.21",
+  "modType": "FORGE",
+  "assetsPath": "assets",
+  "forgeAssetsPath": "src/main/resources/assets",
+  "codePath": ".",
+  "testContent": {
+    "items": [
+      "diamond_sword_item",
+      "iron_helmet_item",
+      "custom_armor_set",
+      "tool_kit"
+    ],
+    "blocks": [
+      "custom_block",
+      "ores",
+      "machine_blocks"
+    ],
+    "entities": [
+      "custom_mobs",
+      "npcs",
+      "projectiles"
+    ],
+    "enchantments": [
+      "power_enchant",
+      "custom_effects"
+    ],
+    "potionEffects": [
+      "speed_plus",
+      "strength_plus"
+    ],
+    "structures": [
+      "test_forge_structure",
+      "custom_dungeons",
+      "monuments"
+    ],
+    "biomes": [
+      "custom_biome"
+    ],
+    "dimensions": [
+      "custom_dimension"
+    ],
+    "recipes": [
+      "diamond_sword_recipe",
+      "custom_tools_recipe",
+      "armor_set_recipe"
+    ],
+    "advancements": [
+      "custom_advancement"
+    ],
+    "particles": [
+      "custom_particles"
+    ],
+    "sounds": [
+      "custom_sounds"
+    ],
+    "commands": [
+      "custom_commands"
+    ],
+    "event_handlers": [
+      "custom_events"
+    ],
+    "capabilities": [
+      "custom_capabilities"
+    ],
+    "network_messages": [
+      "custom_networking"
+    ],
+    "tile_entities": [
+      "custom_tile_entities"
+    ],
+    "fluid_types": [
+      "custom_fluids"
+    ],
+    "custom_data_pack_types": [
+      "custom_worldgen"
+    ]
+  }
+}
