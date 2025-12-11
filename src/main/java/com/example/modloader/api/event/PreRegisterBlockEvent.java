@@ -1,4 +1,4 @@
-package com.example.modloader.api.event;
+﻿package com.example.modloader.api.event;
 
 import com.example.modloader.CustomBlock;
 
@@ -13,3 +13,4 @@ public class PreRegisterBlockEvent extends CancellableModEvent {
         return block;
     }
 }
+

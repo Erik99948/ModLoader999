@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.example.modloader.api.block.BlockBreakBehavior;
 import com.example.modloader.api.block.BlockExplodeBehavior;
@@ -51,7 +51,7 @@ public abstract class AbstractCustomOre extends CustomBlock {
                 brokenBlock.getWorld().dropItemNaturally(brokenBlock.getLocation(), new ItemStack(dropMaterial, dropAmount));
                 event.setCancelled(true);
             } else {
-                breaker.sendMessage("§cYou need a pickaxe of level " + requiredMiningLevel + " or higher to mine this!");
+                breaker.sendMessage("Â§cYou need a pickaxe of level " + requiredMiningLevel + " or higher to mine this!");
                 event.setCancelled(true);
             }
         }

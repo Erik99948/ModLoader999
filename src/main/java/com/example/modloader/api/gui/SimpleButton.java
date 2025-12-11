@@ -1,4 +1,4 @@
-package com.example.modloader.api.gui;
+﻿package com.example.modloader.api.gui;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;

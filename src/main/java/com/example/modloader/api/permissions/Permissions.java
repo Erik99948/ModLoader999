@@ -1,4 +1,4 @@
-package com.example.modloader.api.permissions;
+﻿package com.example.modloader.api.permissions;
 
 import org.bukkit.entity.Player;
 
@@ -8,3 +8,4 @@ public class Permissions {
         return player.hasPermission(permission);
     }
 }
+

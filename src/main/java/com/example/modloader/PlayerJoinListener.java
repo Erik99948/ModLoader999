@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,3 +35,4 @@ public class PlayerJoinListener implements Listener {
         }, 40L);
     }
 }
+

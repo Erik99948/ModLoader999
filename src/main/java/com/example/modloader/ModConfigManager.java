@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.example.modloader.config.ConfigurationSource;
 import com.example.modloader.config.YamlConfigurationSource;
@@ -378,3 +378,4 @@ public class ModConfigManager {
         }
     }
 }
+

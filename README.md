@@ -1331,7 +1331,7 @@ public class MyMod implements ModInitializer {
         System.out.println("Max items from config: " + config.maxItems);
     }
 
-    // ... other lifecycle methods
+   
 }
 ```
 
@@ -1342,18 +1342,17 @@ You can access your `ModConfig` instance directly (as demonstrated above) or ret
 ```java
 import com.example.modloader.api.config.ConfigChangeListener;
 
-// In your ModInitializer's onPreLoad(ModAPI api) method or similar
+
 api.getModConfigManager().registerConfigChangeListener(api.getModId(), new ConfigChangeListener<MyModConfig>() {
     @Override
     public void onConfigChanged(MyModConfig newConfig) {
         MyMod.this.config = newConfig;
         System.out.println("Config reloaded! New welcome message: " + newConfig.welcomeMessage);
-        // Apply new config settings to your mod's active components
+        
     }
 });
 
-// To retrieve the current config instance at any point during your mod's operation:
-// MyModConfig currentConfig = api.getModConfig(MyModConfig.class);
+
 ```
 
 ### Building Your Mod

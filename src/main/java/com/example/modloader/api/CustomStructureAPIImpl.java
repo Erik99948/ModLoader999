@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import com.example.modloader.CustomStructureManager;
 import org.bukkit.Location;

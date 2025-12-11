@@ -1,4 +1,4 @@
-package com.example.modloader.api.event;
+﻿package com.example.modloader.api.event;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -92,3 +92,4 @@ public class EventBus {
         }
     }
 }
+

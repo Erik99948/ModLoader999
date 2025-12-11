@@ -1,4 +1,4 @@
-package com.example.modloader.api.network;
+﻿package com.example.modloader.api.network;
 
 import org.bukkit.entity.Player;
 
@@ -27,3 +27,4 @@ public abstract class Packet implements Serializable {
         return sender;
     }
 }
+

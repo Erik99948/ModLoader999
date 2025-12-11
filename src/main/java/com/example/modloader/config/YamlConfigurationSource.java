@@ -1,4 +1,4 @@
-package com.example.modloader.config;
+﻿package com.example.modloader.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

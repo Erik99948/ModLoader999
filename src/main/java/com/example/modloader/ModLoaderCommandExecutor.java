@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

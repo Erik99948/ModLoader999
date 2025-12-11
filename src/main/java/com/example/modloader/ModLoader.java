@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
@@ -68,3 +68,4 @@ public final class ModLoader extends JavaPlugin {
         }
     }
 }
+

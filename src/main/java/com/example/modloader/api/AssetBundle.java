@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import java.util.List;
 
@@ -14,3 +14,4 @@ public interface AssetBundle {
 
     boolean containsAsset(String assetId);
 }
+

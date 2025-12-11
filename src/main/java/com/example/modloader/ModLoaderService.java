@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.example.modloader.api.ModAPI;
 import com.example.modloader.api.ModAPIImpl;

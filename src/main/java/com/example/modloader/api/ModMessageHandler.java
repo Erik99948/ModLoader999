@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 @FunctionalInterface
 public interface ModMessageHandler {

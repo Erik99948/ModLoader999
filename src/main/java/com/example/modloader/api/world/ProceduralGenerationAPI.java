@@ -1,4 +1,4 @@
-package com.example.modloader.api.world;
+﻿package com.example.modloader.api.world;
 
 public interface ProceduralGenerationAPI {
 
@@ -16,3 +16,4 @@ public interface ProceduralGenerationAPI {
 
 
 }
+

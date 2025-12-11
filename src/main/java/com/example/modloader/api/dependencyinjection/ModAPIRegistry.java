@@ -1,4 +1,4 @@
-package com.example.modloader.api.dependencyinjection;
+﻿package com.example.modloader.api.dependencyinjection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,3 +33,4 @@ public class ModAPIRegistry {
         return apiInstances.containsKey(apiType) && !apiInstances.get(apiType).isEmpty();
     }
 }
+

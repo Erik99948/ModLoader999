@@ -1,4 +1,4 @@
-package com.example.modloader.api.event;
+﻿package com.example.modloader.api.event;
 
 import org.bukkit.inventory.ItemStack;
 
@@ -19,3 +19,4 @@ public class PreRegisterItemEvent extends CancellableModEvent {
         return item;
     }
 }
+

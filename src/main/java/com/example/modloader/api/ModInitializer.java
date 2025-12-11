@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import com.example.modloader.api.dependencyinjection.Binder;
 
@@ -20,3 +20,4 @@ public interface ModInitializer {
 
     void onPostDisable();
 }
+

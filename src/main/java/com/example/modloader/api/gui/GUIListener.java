@@ -1,4 +1,4 @@
-package com.example.modloader.api.gui;
+﻿package com.example.modloader.api.gui;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,3 +22,4 @@ public class GUIListener implements Listener {
         }
     }
 }
+

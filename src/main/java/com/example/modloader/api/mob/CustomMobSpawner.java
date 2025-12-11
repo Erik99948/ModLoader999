@@ -1,4 +1,4 @@
-package com.example.modloader.api.mob;
+﻿package com.example.modloader.api.mob;
 
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -11,3 +11,4 @@ public interface CustomMobSpawner {
 
     List<LivingEntity> spawn(World world, Random random, Block block);
 }
+

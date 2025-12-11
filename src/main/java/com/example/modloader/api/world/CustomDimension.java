@@ -1,4 +1,4 @@
-package com.example.modloader.api.world;
+﻿package com.example.modloader.api.world;
 
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -40,3 +40,4 @@ public interface CustomDimension {
 
 
 }
+

@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import com.example.modloader.AssetManager;

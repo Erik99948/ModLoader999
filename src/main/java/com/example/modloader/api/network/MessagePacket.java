@@ -1,4 +1,4 @@
-package com.example.modloader.api.network;
+﻿package com.example.modloader.api.network;
 
 public class MessagePacket extends Packet {
     private static final long serialVersionUID = 1L;
@@ -41,3 +41,4 @@ public class MessagePacket extends Packet {
                '}';
     }
 }
+

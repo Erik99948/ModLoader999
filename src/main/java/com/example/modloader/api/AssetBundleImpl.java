@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,3 +41,4 @@ public class AssetBundleImpl implements AssetBundle {
         return assetIds.contains(assetId);
     }
 }
+

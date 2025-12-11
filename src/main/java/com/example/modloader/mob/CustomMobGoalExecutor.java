@@ -1,4 +1,4 @@
-package com.example.modloader.mob;
+﻿package com.example.modloader.mob;
 
 import com.example.modloader.api.mob.CustomMobGoal;
 import org.bukkit.entity.LivingEntity;
@@ -35,3 +35,4 @@ public class CustomMobGoalExecutor {
         }
     }
 }
+

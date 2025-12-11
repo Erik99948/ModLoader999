@@ -1,4 +1,4 @@
-package com.example.modloader.api.gui;
+﻿package com.example.modloader.api.gui;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -64,3 +64,4 @@ public class GUI {
         }
     }
 }
+

@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.example.modloader.api.block.BlockBreakBehavior;
 import com.example.modloader.api.block.BlockExplodeBehavior;
@@ -110,3 +110,4 @@ public class CustomBlock {
         return null;
     }
 }
+

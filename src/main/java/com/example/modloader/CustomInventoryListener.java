@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.example.modloader.api.CustomInventoryAPIImpl;
 import org.bukkit.event.EventHandler;

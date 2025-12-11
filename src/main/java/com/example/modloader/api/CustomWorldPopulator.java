@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import org.bukkit.World;
 import org.bukkit.Chunk;
@@ -9,3 +9,4 @@ public interface CustomWorldPopulator {
 
     void populate(World world, Random random, Chunk chunk);
 }
+

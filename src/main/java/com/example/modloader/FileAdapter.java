@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;

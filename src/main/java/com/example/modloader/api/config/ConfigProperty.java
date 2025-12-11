@@ -1,4 +1,4 @@
-package com.example.modloader.api.config;
+﻿package com.example.modloader.api.config;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 public enum ModState {
     UNLOADED,
@@ -10,3 +10,4 @@ public enum ModState {
     DISABLED,
     ERRORED
 }
+

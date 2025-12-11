@@ -1,4 +1,4 @@
-package com.example.modloader.api.world;
+﻿package com.example.modloader.api.world;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

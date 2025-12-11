@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Recipe;
@@ -38,3 +38,4 @@ public class CustomRecipeRegistry {
         registeredRecipes.clear();
     }
 }
+

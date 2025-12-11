@@ -1,4 +1,4 @@
-package com.example.modloader.gui;
+﻿package com.example.modloader.gui;
 
 import com.example.modloader.ModInfo;
 import com.example.modloader.ModLoaderService;

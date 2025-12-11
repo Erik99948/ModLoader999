@@ -1,4 +1,4 @@
-package com.example.modloader.api.event;
+﻿package com.example.modloader.api.event;
 
 import java.util.function.Consumer;
 
@@ -19,3 +19,4 @@ class EventListener {
         return priority;
     }
 }
+

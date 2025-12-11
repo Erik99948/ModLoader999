@@ -1,4 +1,4 @@
-package com.example.modloader.api.dependencyinjection;
+﻿package com.example.modloader.api.dependencyinjection;
 
 import com.example.modloader.api.dependencyinjection.Binder.ProviderBinding;
 import java.lang.reflect.Constructor;
@@ -78,7 +78,7 @@ public class ModInjector {
                 }
             }
 
-            // Handle List<API> injection
+            
             if (List.class.isAssignableFrom(parameterType)) {
                 java.lang.reflect.Type genericParameterType = constructor.getGenericParameterTypes()[i];
                 if (genericParameterType instanceof java.lang.reflect.ParameterizedType) {
@@ -104,3 +104,4 @@ public class ModInjector {
         return instance;
     }
 }
+

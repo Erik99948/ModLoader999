@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -43,7 +43,7 @@ public class Marketplace {
         String path = httpExchange.getRequestURI().getPath();
         String[] pathParts = path.split("/");
         if (pathParts.length < 4) {
-            httpExchange.sendResponseHeaders(400, -1); // Bad Request
+            httpExchange.sendResponseHeaders(400, -1); 
             return;
         }
         String modId = pathParts[3];
@@ -58,7 +58,7 @@ public class Marketplace {
                 Files.copy(file.toPath(), os);
             }
         } else {
-            httpExchange.sendResponseHeaders(404, -1); // Not Found
+            httpExchange.sendResponseHeaders(404, -1); 
         }
     }
 

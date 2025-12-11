@@ -1,4 +1,4 @@
-package com.example.modloader.api.event;
+﻿package com.example.modloader.api.event;
 
 public abstract class CancellableModEvent extends ModEvent implements Cancellable {
     private boolean cancelled = false;
@@ -13,3 +13,4 @@ public abstract class CancellableModEvent extends ModEvent implements Cancellabl
         this.cancelled = cancel;
     }
 }
+

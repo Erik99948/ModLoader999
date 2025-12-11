@@ -1,4 +1,4 @@
-package com.example.modloader.api.network;
+﻿package com.example.modloader.api.network;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;

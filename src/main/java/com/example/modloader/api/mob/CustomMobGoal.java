@@ -1,4 +1,4 @@
-package com.example.modloader.api.mob;
+﻿package com.example.modloader.api.mob;
 
 import org.bukkit.entity.LivingEntity;
 
@@ -12,3 +12,4 @@ public interface CustomMobGoal {
 
     boolean shouldStart(LivingEntity entity);
 }
+

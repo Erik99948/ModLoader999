@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,3 +10,4 @@ import java.lang.annotation.Target;
 public @interface APIVersion {
     String value();
 }
+

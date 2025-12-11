@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.example.modloader.api.mob.CustomMobGoal;
 import org.bukkit.attribute.Attribute;
@@ -68,3 +68,4 @@ public class CustomMob {
         return customAttributes;
     }
 }
+

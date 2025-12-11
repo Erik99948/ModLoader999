@@ -1,4 +1,4 @@
-package com.example.modloader.api.event;
+﻿package com.example.modloader.api.event;
 
 import com.example.modloader.ModInfo;
 
@@ -13,3 +13,4 @@ public class ModPostDisableEvent extends ModEvent {
         return modInfo;
     }
 }
+

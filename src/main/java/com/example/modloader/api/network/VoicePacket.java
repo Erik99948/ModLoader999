@@ -1,4 +1,4 @@
-package com.example.modloader.api.network;
+﻿package com.example.modloader.api.network;
 
 import java.io.Serializable;
 
@@ -14,3 +14,4 @@ public class VoicePacket extends Packet implements Serializable {
         return data;
     }
 }
+

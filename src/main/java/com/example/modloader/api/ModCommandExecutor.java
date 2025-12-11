@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -12,3 +12,4 @@ public interface ModCommandExecutor {
 
     List<String> onTabComplete(CommandSender sender, String alias, String[] args);
 }
+

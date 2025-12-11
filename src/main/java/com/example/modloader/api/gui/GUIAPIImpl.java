@@ -1,4 +1,4 @@
-package com.example.modloader.api.gui;
+﻿package com.example.modloader.api.gui;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,3 +26,4 @@ public class GUIAPIImpl implements GUIAPI {
         return openGUIs.get(inventory);
     }
 }
+

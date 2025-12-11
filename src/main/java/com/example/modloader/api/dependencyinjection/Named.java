@@ -1,4 +1,4 @@
-package com.example.modloader.api.dependencyinjection;
+﻿package com.example.modloader.api.dependencyinjection;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,3 +10,4 @@ import java.lang.annotation.Target;
 public @interface Named {
     String value();
 }
+

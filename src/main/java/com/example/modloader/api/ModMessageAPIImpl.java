@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import com.example.modloader.api.network.MessagePacket;
 import com.example.modloader.api.network.Networking;
@@ -142,3 +142,4 @@ public class ModMessageAPIImpl implements ModMessageAPI {
         }
     }
 }
+

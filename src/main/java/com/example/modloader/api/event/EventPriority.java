@@ -1,4 +1,4 @@
-package com.example.modloader.api.event;
+﻿package com.example.modloader.api.event;
 
 public enum EventPriority {
     LOWEST,
@@ -8,3 +8,4 @@ public enum EventPriority {
     HIGHEST,
     MONITOR
 }
+

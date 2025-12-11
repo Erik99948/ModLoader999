@@ -1,4 +1,4 @@
-package com.example.modloader.api;
+﻿package com.example.modloader.api;
 
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;

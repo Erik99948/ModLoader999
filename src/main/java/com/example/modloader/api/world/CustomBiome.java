@@ -1,4 +1,4 @@
-package com.example.modloader.api.world;
+﻿package com.example.modloader.api.world;
 
 import org.bukkit.block.Biome;
 import org.bukkit.Particle;
@@ -42,3 +42,4 @@ public interface CustomBiome {
 
 
 }
+

@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -277,3 +277,4 @@ public class WebServer {
         sendJsonResponse(httpExchange, statusCode, gson.toJson(errorResponse));
     }
 }
+

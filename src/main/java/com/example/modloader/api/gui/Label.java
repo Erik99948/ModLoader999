@@ -1,4 +1,4 @@
-package com.example.modloader.api.gui;
+﻿package com.example.modloader.api.gui;
 
 import org.bukkit.inventory.ItemStack;
 
@@ -23,3 +23,4 @@ public class Label implements Component {
         event.setCancelled(true);
     }
 }
+

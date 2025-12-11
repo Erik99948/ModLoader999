@@ -1,4 +1,4 @@
-package com.example.modloader;
+﻿package com.example.modloader;
 
 import com.example.modloader.api.event.EventBus;
 import com.example.modloader.api.event.PreRegisterItemEvent;
@@ -40,3 +40,4 @@ public class CustomItemRegistry {
         return registeredItems.get(id);
     }
 }
+
