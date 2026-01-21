@@ -1,12 +1,13 @@
-﻿package com.example.modloader.api.dependencyinjection;
+package com.example.modloader.api.dependencyinjection;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.lang.annotation.*;
+import java.lang.reflect.*;
+import java.util.*;
 
+/**
+ * Simple dependency injection binder.
+ */
 public class Binder {
-
     private final Map<BindingKey, Object> bindings = new HashMap<>();
     private final Map<BindingKey, ProviderBinding> providerBindings = new HashMap<>();
 
@@ -18,10 +19,12 @@ public class Binder {
         bindings.put(new BindingKey(type, name), instance);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getInstance(Class<T> type) {
         return getInstance(type, null);
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getInstance(Class<T> type, String name) {
         return (T) bindings.get(new BindingKey(type, name));
     }
@@ -64,13 +67,8 @@ public class Binder {
             this.instance = instance;
         }
 
-        public Method getMethod() {
-            return method;
-        }
-
-        public Object getInstance() {
-            return instance;
-        }
+        public Method getMethod() { return method; }
+        public Object getInstance() { return instance; }
     }
 
     private static class BindingKey {
@@ -97,3 +95,25 @@ public class Binder {
     }
 }
 
+/**
+ * Annotation for named bindings.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
+@interface Named {
+    String value();
+}
+
+/**
+ * Annotation for provider methods.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface Provides {}
+
+/**
+ * Annotation for singleton classes.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@interface Singleton {}

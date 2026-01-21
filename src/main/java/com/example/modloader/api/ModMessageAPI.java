@@ -1,16 +1,13 @@
-﻿package com.example.modloader.api;
+package com.example.modloader.api;
 
+/**
+ * API for inter-mod and inter-server messaging.
+ */
 public interface ModMessageAPI {
-
     void sendMessage(String recipientModId, String messageType, String payload);
-
     void broadcastMessage(String messageType, String payload);
-
     void registerMessageHandler(String messageType, ModMessageHandler handler);
-
     void unregisterMessageHandler(String messageType, ModMessageHandler handler);
-
     void sendInterServerMessage(String targetServer, String recipientModId, String messageType, String payload);
-
     void broadcastInterServerMessage(String messageType, String payload);
 }

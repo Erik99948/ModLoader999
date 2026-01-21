@@ -1,0 +1,11 @@
+{
+    "id": "examplemod",
+    "name": "Example Mod",
+    "version": "1.0.0",
+    "author": "YourName",
+    "description": "An example mod demonstrating ModLoader999 capabilities",
+    "main": "com.example.examplemod.ExampleMod",
+    "apiVersion": "1.0",
+    "dependencies": {},
+    "softDependencies": []
+}

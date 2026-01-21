@@ -1,95 +1,97 @@
-﻿package com.example.modloader.api.event;
+package com.example.modloader.api.event;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Simple event bus for dispatching events to registered listeners.
+ */
 public class EventBus {
-
     private static final Logger LOGGER = Logger.getLogger(EventBus.class.getName());
-    private final Map<Class<? extends ModEvent>, List<MethodEventListener>> listeners = new HashMap<>();
+    private final Map<Class<?>, List<ListenerMethod>> listeners = new ConcurrentHashMap<>();
 
+    /**
+     * Register all event handler methods from the listener object.
+     */
     public void register(Object listenerObject) {
         for (Method method : listenerObject.getClass().getMethods()) {
-            if (method.isAnnotationPresent(SubscribeEvent.class)) {
-                if (method.getParameterCount() != 1) {
-                    LOGGER.log(Level.WARNING, "Method " + method.getName() + " in " + listenerObject.getClass().getName() + " is annotated with @SubscribeEvent but does not have exactly one parameter. Skipping.");
-                    continue;
-                }
-                Class<?> parameterType = method.getParameterTypes()[0];
-                if (!ModEvent.class.isAssignableFrom(parameterType)) {
-                    LOGGER.log(Level.WARNING, "Method " + method.getName() + " in " + listenerObject.getClass().getName() + " is annotated with @SubscribeEvent but its parameter is not a ModEvent. Skipping.");
-                    continue;
-                }
-
-                SubscribeEvent annotation = method.getAnnotation(SubscribeEvent.class);
-                EventPriority priority = annotation.priority();
-                boolean ignoreCancelled = annotation.ignoreCancelled();
-
-                Class<? extends ModEvent> eventType = (Class<? extends ModEvent>) parameterType;
-                listeners.computeIfAbsent(eventType, k -> new ArrayList<>()).add(new MethodEventListener(listenerObject, method, priority, ignoreCancelled));
-                listeners.get(eventType).sort(Comparator.comparing(MethodEventListener::getPriority).reversed());
+            if (method.getParameterCount() == 1) {
+                Class<?> eventType = method.getParameterTypes()[0];
+                listeners.computeIfAbsent(eventType, k -> Collections.synchronizedList(new ArrayList<>()))
+                    .add(new ListenerMethod(listenerObject, method));
             }
         }
     }
 
-    public <T extends ModEvent> void post(T event) {
-        List<MethodEventListener> eventListeners = listeners.get(event.getClass());
-        if (eventListeners != null) {
-            for (MethodEventListener listener : eventListeners) {
-                if (event instanceof Cancellable && ((Cancellable) event).isCancelled() && listener.isIgnoreCancelled()) {
-                    continue;
-                }
-                try {
-                    listener.getMethod().invoke(listener.getTarget(), event);
-                } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "Error dispatching event " + event.getClass().getName() + " to listener " + listener.getTarget().getClass().getName() + ".", e);
-                }
-            }
-        }
-    }
-
+    /**
+     * Unregister all event handlers from the listener object.
+     */
     public void unregister(Object listenerObject) {
-        listeners.forEach((eventType, methodEventListeners) ->
-                methodEventListeners.removeIf(listener -> listener.getTarget().equals(listenerObject))
+        listeners.values().forEach(list -> 
+            list.removeIf(lm -> lm.instance.equals(listenerObject))
         );
     }
 
-    private static class MethodEventListener {
-        private final Object target;
-        private final Method method;
-        private final EventPriority priority;
-        private final boolean ignoreCancelled;
+    /**
+     * Post an event to all registered listeners.
+     */
+    public void post(Object event) {
+        List<ListenerMethod> eventListeners = listeners.get(event.getClass());
+        if (eventListeners != null) {
+            for (ListenerMethod lm : new ArrayList<>(eventListeners)) {
+                try {
+                    lm.method.invoke(lm.instance, event);
+                } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE, "Error dispatching event " + event.getClass().getName(), e);
+                }
+            }
+        }
+    }
 
-        public MethodEventListener(Object target, Method method, EventPriority priority, boolean ignoreCancelled) {
-            this.target = target;
+    /**
+     * Check if an event is cancelled (if it's a CancellableEvent).
+     */
+    public boolean isCancelled(Object event) {
+        if (event instanceof CancellableEvent) {
+            return ((CancellableEvent) event).isCancelled();
+        }
+        return false;
+    }
+
+    private static class ListenerMethod {
+        final Object instance;
+        final Method method;
+
+        ListenerMethod(Object instance, Method method) {
+            this.instance = instance;
             this.method = method;
-            this.priority = priority;
-            this.ignoreCancelled = ignoreCancelled;
             this.method.setAccessible(true);
         }
+    }
 
-        public Object getTarget() {
-            return target;
+    // ==================== Base Event Classes ====================
+
+    /**
+     * Base class for all events.
+     */
+    public static class BaseEvent {
+    }
+
+    /**
+     * Base class for events that can be cancelled.
+     */
+    public static class CancellableEvent extends BaseEvent {
+        private boolean cancelled = false;
+
+        public boolean isCancelled() {
+            return cancelled;
         }
 
-        public Method getMethod() {
-            return method;
-        }
-
-        public EventPriority getPriority() {
-            return priority;
-        }
-
-        public boolean isIgnoreCancelled() {
-            return ignoreCancelled;
+        public void setCancelled(boolean cancelled) {
+            this.cancelled = cancelled;
         }
     }
 }
-

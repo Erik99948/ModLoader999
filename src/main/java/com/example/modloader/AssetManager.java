@@ -1,21 +1,14 @@
-﻿package com.example.modloader;
+package com.example.modloader;
 
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URLClassLoader;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 
 public class AssetManager {
-
     private final JavaPlugin plugin;
     private final File resourcePackStagingDir;
-
     private final Map<String, StagedAssetInfo> stagedAssets = new HashMap<>();
 
     public AssetManager(JavaPlugin plugin) {
@@ -55,15 +48,15 @@ public class AssetManager {
                 }
             }
         }
-
+        
         File modAssetDir = new File(resourcePackStagingDir, "assets" + File.separator + modId);
         if (!modAssetDir.exists()) {
             modAssetDir.mkdirs();
         }
-
+        
         File targetFile = new File(modAssetDir, assetTypeFolder + File.separator + filePathInJar);
         targetFile.getParentFile().mkdirs();
-
+        
         try (InputStream is = modClassLoader.getResourceAsStream(filePathInJar)) {
             if (is == null) {
                 plugin.getLogger().warning("Mod " + modId + ": Asset file '" + filePathInJar + "' not found in mod JAR. Cannot register asset '" + assetId + "'.");
@@ -91,12 +84,10 @@ public class AssetManager {
                 return pathWithoutPrefix.substring(0, firstSlash);
             }
         }
-
         String extension = getFileExtension(filePathInJar);
         if (extension.equalsIgnoreCase("png") || extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("gif")) {
             return "textures";
         } else if (extension.equalsIgnoreCase("json")) {
-
             return "models";
         } else if (extension.equalsIgnoreCase("ogg")) {
             return "sounds";
@@ -124,7 +115,6 @@ public class AssetManager {
 
     public void unregisterAllAssetsForMod(String modIdToUnregister) {
         stagedAssets.entrySet().removeIf(entry -> entry.getValue().modId.equals(modIdToUnregister));
-
         File modAssetDir = new File(resourcePackStagingDir, "assets" + File.separator + modIdToUnregister);
         if (modAssetDir.exists()) {
             deleteDirectory(modAssetDir);

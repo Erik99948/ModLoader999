@@ -1,14 +1,15 @@
-﻿package com.example.modloader;
+package com.example.modloader;
 
 import com.example.modloader.api.mob.CustomMobGoal;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.EntityType;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
+/**
+ * Represents a custom mob with configurable attributes and AI goals.
+ */
 public class CustomMob {
     private final String id;
     private final EntityType baseType;
@@ -20,7 +21,9 @@ public class CustomMob {
     private final List<CustomMobGoal> goals;
     private final Map<Attribute, Double> customAttributes;
 
-    public CustomMob(String id, EntityType baseType, String name, double maxHealth, double attackDamage, double movementSpeed, int customModelData, List<CustomMobGoal> goals, Map<Attribute, Double> customAttributes) {
+    public CustomMob(String id, EntityType baseType, String name, double maxHealth, double attackDamage, 
+                     double movementSpeed, int customModelData, List<CustomMobGoal> goals, 
+                     Map<Attribute, Double> customAttributes) {
         this.id = id;
         this.baseType = baseType;
         this.name = name;
@@ -32,40 +35,13 @@ public class CustomMob {
         this.customAttributes = customAttributes != null ? Collections.unmodifiableMap(customAttributes) : Collections.emptyMap();
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public EntityType getBaseType() {
-        return baseType;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public double getMaxHealth() {
-        return maxHealth;
-    }
-
-    public double getAttackDamage() {
-        return attackDamage;
-    }
-
-    public double getMovementSpeed() {
-        return movementSpeed;
-    }
-
-    public int getCustomModelData() {
-        return customModelData;
-    }
-
-    public List<CustomMobGoal> getGoals() {
-        return goals;
-    }
-
-    public Map<Attribute, Double> getCustomAttributes() {
-        return customAttributes;
-    }
+    public String getId() { return id; }
+    public EntityType getBaseType() { return baseType; }
+    public String getName() { return name; }
+    public double getMaxHealth() { return maxHealth; }
+    public double getAttackDamage() { return attackDamage; }
+    public double getMovementSpeed() { return movementSpeed; }
+    public int getCustomModelData() { return customModelData; }
+    public List<CustomMobGoal> getGoals() { return goals; }
+    public Map<Attribute, Double> getCustomAttributes() { return customAttributes; }
 }
-

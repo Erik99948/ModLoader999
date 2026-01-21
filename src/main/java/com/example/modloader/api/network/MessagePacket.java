@@ -1,8 +1,12 @@
-﻿package com.example.modloader.api.network;
+package com.example.modloader.api.network;
 
-public class MessagePacket extends Packet {
+import java.io.Serializable;
+import java.util.UUID;
+
+public class MessagePacket implements Serializable {
     private static final long serialVersionUID = 1L;
-
+    
+    private UUID senderId;
     private final String senderModId;
     private final String recipientModId;
     private final String messageType;
@@ -15,30 +19,10 @@ public class MessagePacket extends Packet {
         this.payload = payload;
     }
 
-    public String getSenderModId() {
-        return senderModId;
-    }
-
-    public String getRecipientModId() {
-        return recipientModId;
-    }
-
-    public String getMessageType() {
-        return messageType;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    @Override
-    public String toString() {
-        return "MessagePacket{" +
-               "senderModId='" + senderModId + "'" +
-               ", recipientModId='" + recipientModId + "'" +
-               ", messageType='" + messageType + "'" +
-               ", payload='" + payload + "'" +
-               '}';
-    }
+    public UUID getSenderId() { return senderId; }
+    public void setSenderId(UUID senderId) { this.senderId = senderId; }
+    public String getSenderModId() { return senderModId; }
+    public String getRecipientModId() { return recipientModId; }
+    public String getMessageType() { return messageType; }
+    public String getPayload() { return payload; }
 }
-

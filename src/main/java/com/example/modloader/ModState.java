@@ -1,5 +1,8 @@
-﻿package com.example.modloader;
+package com.example.modloader;
 
+/**
+ * Represents the lifecycle state of a mod.
+ */
 public enum ModState {
     UNLOADED,
     LOADING,
@@ -10,4 +13,3 @@ public enum ModState {
     DISABLED,
     ERRORED
 }
-

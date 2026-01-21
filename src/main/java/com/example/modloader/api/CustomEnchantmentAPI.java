@@ -1,13 +1,10 @@
-﻿package com.example.modloader.api;
+package com.example.modloader.api;
 
-import com.example.modloader.CustomEnchantment;
-import org.bukkit.enchantments.Enchantment;
-
+/**
+ * API for custom enchantments.
+ */
 public interface CustomEnchantmentAPI {
-
-    boolean registerEnchantment(CustomEnchantment enchantment);
-
-    CustomEnchantment getEnchantment(String namespace);
-
-    CustomEnchantment getEnchantmentByName(String name);
+    boolean registerEnchantment(Object enchantment);
+    Object getEnchantment(String namespace);
+    Object getEnchantmentByName(String name);
 }
