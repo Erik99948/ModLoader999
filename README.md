@@ -32,6 +32,9 @@ Welcome to the official documentation for ModLoader999, a powerful PaperMC plugi
         *   [Custom Sounds](#custom-sounds)
         *   [Dimension Management](#dimension-management)
         *   [Custom Structures](#custom-structures)
+        *   [Voice Chat API](#voice-chat-api)
+        *   [Mod Messaging API](#mod-messaging-api)
+        *   [Custom Assets](#custom-assets)
     *   [Mod Configuration](#mod-configuration)
     *   [Building Your Mod](#building-your-mod)
     *   [Hot-Reloading for Faster Development](#hot-reloading-for-faster-development)
@@ -141,7 +144,7 @@ To commence mod development, it is essential to establish a Java project using e
         <dependency>
             <groupId>io.github.erik99948</groupId>
             <artifactId>modloader</artifactId>
-            <version>3.1.0</version>
+            <version>4.0.0</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
@@ -164,7 +167,7 @@ To commence mod development, it is essential to establish a Java project using e
     ```gradle
     dependencies {
         compileOnly 'io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT'
-        compileOnly 'io.github.erik99948:modloader:3.1.0'
+        compileOnly 'io.github.erik99948:modloader:4.0.0'
     }
     ```
 
@@ -1262,6 +1265,125 @@ While the `VoiceAPI` handles the core audio and network plumbing, mod developers
 *   **User Interface:** Creating in-game indicators for who is speaking, volume controls, etc.
 *   **Player Management:** Mapping UUIDs to in-game players and managing their voice states.
 *   **Audio Codecs (Optional):** While the API transmits raw PCM data, mod developers could implement their own audio compression/decompression using external libraries if bandwidth is a concern, by processing the `byte[] data` before calling `sendVoiceData` and after receiving it.
+
+#### Mod Messaging API
+
+ModLoader999 provides a messaging system that allows different mods to communicate with each other. This system enables inter-mod communication for complex interactions and shared functionality.
+
+**Accessing the ModMessageAPI:**
+
+You can obtain an instance of the `ModMessageAPI` through the main `ModAPI` object provided to your `ModInitializer`'s lifecycle methods.
+
+```java
+import com.example.modloader.api.ModMessageAPI;
+
+// In your ModInitializer's onLoad(ModAPI api) method
+ModMessageAPI messageAPI = api.getModMessageAPI();
+```
+
+**Core Functionalities:**
+
+The `ModMessageAPI` offers the following methods:
+
+*   `sendMessage(String recipientModId, String messageType, String payload)`: Sends a message to a specific mod identified by its mod ID.
+*   `broadcastMessage(String messageType, String payload)`: Broadcasts a message to all loaded mods.
+*   `registerMessageHandler(String messageType, ModMessageHandler handler)`: Registers a handler to process incoming messages of a specific type.
+*   `unregisterMessageHandler(String messageType, ModMessageHandler handler)`: Removes a previously registered message handler.
+*   `sendInterServerMessage(String targetServer, String recipientModId, String messageType, String payload)`: Sends a message to a mod on another server (for multi-server setups).
+*   `broadcastInterServerMessage(String messageType, String payload)`: Broadcasts a message to all mods across multiple servers.
+
+**Example Usage:**
+
+This example demonstrates how a mod could send messages to other mods and handle incoming messages.
+
+```java
+import com.example.modloader.api.ModAPI;
+import com.example.modloader.api.ModInitializer;
+import com.example.modloader.api.ModMessageAPI;
+import com.example.modloader.api.ModMessageHandler;
+
+public class MyMessagingMod implements ModInitializer {
+
+    @Override
+    public void onLoad(ModAPI api) {
+        ModMessageAPI messageAPI = api.getModMessageAPI();
+
+        // Register a handler for "health_update" messages
+        messageAPI.registerMessageHandler("health_update", new ModMessageHandler() {
+            @Override
+            public void handleMessage(String senderModId, String payload) {
+                System.out.println("Received health update from " + senderModId + ": " + payload);
+                // Process the health update message
+            }
+        });
+
+        // Send a message to another mod called "HealthMod"
+        messageAPI.sendMessage("HealthMod", "request_health_status", api.getModId());
+    }
+}
+```
+
+#### Custom Assets
+
+ModLoader999 provides an asset management system that allows mods to register and manage custom assets such as sounds, textures, and models. This system handles the distribution of assets to clients through the resource pack system.
+
+**Accessing the CustomAssetAPI:**
+
+You can obtain an instance of the `CustomAssetAPI` through the main `ModAPI` object provided to your `ModInitializer`'s lifecycle methods.
+
+```java
+import com.example.modloader.api.CustomAssetAPI;
+
+// In your ModInitializer's onLoad(ModAPI api) method
+CustomAssetAPI assetAPI = api.getCustomAssetAPI();
+```
+
+**Core Functionalities:**
+
+The `CustomAssetAPI` offers the following methods:
+
+*   `registerSound(String assetId, String soundFilePath)`: Registers a custom sound asset.
+*   `registerModel(String assetId, String modelFilePath)`: Registers a custom model asset.
+*   `registerTexture(String assetId, String textureFilePath)`: Registers a custom texture asset.
+*   `getAssetFile(String assetId)`: Retrieves the file for a registered asset.
+*   `getAssetUrl(String assetId)`: Gets the URL for accessing an asset.
+*   `createAssetBundle(String bundleId)`: Creates a new asset bundle for grouping related assets.
+*   `registerAssetBundle(AssetBundle bundle)`: Registers an asset bundle.
+*   `getAssetBundle(String bundleId)`: Retrieves a registered asset bundle.
+
+**Example Usage:**
+
+This example demonstrates how a mod could register custom assets.
+
+```java
+import com.example.modloader.api.ModAPI;
+import com.example.modloader.api.ModInitializer;
+import com.example.modloader.api.CustomAssetAPI;
+
+public class MyAssetMod implements ModInitializer {
+
+    @Override
+    public void onLoad(ModAPI api) {
+        CustomAssetAPI assetAPI = api.getCustomAssetAPI();
+
+        // Register a custom sound
+        assetAPI.registerSound("magic_spell_sound", "sounds/magic_spell.ogg");
+
+        // Register a custom texture
+        assetAPI.registerTexture("magic_wand_texture", "textures/items/magic_wand.png");
+
+        // Register a custom model
+        assetAPI.registerModel("magic_wand_model", "models/item/magic_wand.json");
+
+        // Create and register an asset bundle
+        AssetBundle magicBundle = assetAPI.createAssetBundle("magic_bundle");
+        magicBundle.addAsset("magic_spell_sound");
+        magicBundle.addAsset("magic_wand_texture");
+        magicBundle.addAsset("magic_wand_model");
+        assetAPI.registerAssetBundle(magicBundle);
+    }
+}
+```
 
 ---
 ### Mod Configuration
